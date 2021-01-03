@@ -1,8 +1,9 @@
 package worth.client.model;
 
-import worth.RegistrationService;
-import worth.RegistrationTask;
-import worth.SelectionTask;
+import worth.CommunicationProtocol;
+import worth.server.RMIRegistrationService;
+import worth.server.RegistrationTask;
+import worth.server.SelectionTask;
 import worth.exceptions.PasswordTooShortException;
 import worth.exceptions.CharactersNotAllowedException;
 import worth.exceptions.UsernameNotAvailableException;
@@ -32,8 +33,8 @@ public class ClientModel {
         // apre connessione TCP con il server
         this.socket = SocketChannel.open();
         InetSocketAddress address = new InetSocketAddress(
-                SelectionTask.SERVER_IP_ADDRESS,
-                SelectionTask.SERVER_PORT
+                CommunicationProtocol.SERVER_IP_ADDRESS,
+                CommunicationProtocol.SERVER_PORT
         );
         this.socket.connect(address); // bloccante per il client
     }
@@ -42,8 +43,9 @@ public class ClientModel {
             throws RemoteException, NotBoundException, CharactersNotAllowedException,
             UsernameNotAvailableException, PasswordTooShortException {
         // realizza connessione RMI per il servizio di registrazione
-        Registry registry = LocateRegistry.getRegistry(RegistrationTask.REGISTRY_PORT);
-        RegistrationService regService = (RegistrationService) registry.lookup(RegistrationService.REGISTRATION_SERVICE_NAME);
+        Registry registry = LocateRegistry.getRegistry(CommunicationProtocol.REGISTRY_PORT);
+        RMIRegistrationService regService =
+                (RMIRegistrationService) registry.lookup(CommunicationProtocol.REGISTRATION_SERVICE_NAME);
         // call al servizio RMI
         regService.register(username, password);
     }

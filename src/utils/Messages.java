@@ -36,4 +36,5 @@ public class Messages {
 
     // messaggio "registrazione riuscita con successo"
     public static String REGISTRATION_SUCCESSFUL = "Registration successful";
+
 }

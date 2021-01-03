@@ -1,4 +1,4 @@
-package worth;
+package worth.server;
 
 import worth.exceptions.PasswordTooShortException;
 import worth.exceptions.CharactersNotAllowedException;
@@ -12,10 +12,7 @@ import java.rmi.RemoteException;
  *
  * Interfaccia del servizio RMI di registrazione
  */
-public interface RegistrationService extends Remote {
-    String REGISTRATION_SERVICE_NAME = "RegistrationService";
-    int MIN_PASSWORD_LEN = 8;
-    String USERNAME_REGEX = "^[a-zA-Z0-9._-]+$"; // only a-z, A-Z, 0-9, . - _ allowed
+public interface RMIRegistrationService extends Remote {
 
     /**
      * Registrazione di utente su WORTH

@@ -1,4 +1,6 @@
-package worth;
+package worth.server;
+
+import worth.CommunicationProtocol;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -10,7 +12,6 @@ import java.rmi.registry.Registry;
  * Task che si occupa della registrazione degli utenti
  */
 public class RegistrationTask implements Runnable {
-    public static final int REGISTRY_PORT = 6789;
     private final Registration registration;
 
     public RegistrationTask(Registration registration) {
@@ -21,13 +22,13 @@ public class RegistrationTask implements Runnable {
     public void run() {
         try {
             // creo oggetto
-            RegistrationService registrationService = new RegistrationServiceImpl(registration);
+            RMIRegistrationService registrationService = new RMIRegistrationServiceImpl(registration);
 
             // creo registry su porta REG_PORT
-            Registry registry = LocateRegistry.createRegistry(REGISTRY_PORT);
+            Registry registry = LocateRegistry.createRegistry(CommunicationProtocol.REGISTRY_PORT);
 
             // pubblico stub nel registry
-            registry.rebind(RegistrationService.REGISTRATION_SERVICE_NAME, registrationService);
+            registry.rebind(CommunicationProtocol.REGISTRATION_SERVICE_NAME, registrationService);
         } catch (RemoteException e) {
             e.printStackTrace();
         }

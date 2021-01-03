@@ -1,7 +1,9 @@
-package worth;
+package worth.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import worth.Project;
+import worth.User;
 import worth.exceptions.UsernameNotAvailableException;
 
 import java.io.File;

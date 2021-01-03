@@ -1,4 +1,6 @@
-package worth;
+package worth.server;
+
+import worth.CommunicationProtocol;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -16,8 +18,6 @@ import java.util.Set;
  * Created by alessiomatricardi on 03/01/21
  */
 public class SelectionTask implements Runnable {
-    public static final String SERVER_IP_ADDRESS = "localhost";
-    public static final int SERVER_PORT = 2500; // porta del server
     private static final int ALLOCATION_SIZE = 1024*1024; // size (in byte) per allocazione di un ByteBuffer
 
     public void run() {
@@ -26,7 +26,10 @@ public class SelectionTask implements Runnable {
 
         try {
             serverChannel = ServerSocketChannel.open();
-            InetSocketAddress address = new InetSocketAddress(SERVER_IP_ADDRESS, SERVER_PORT);
+            InetSocketAddress address = new InetSocketAddress(
+                    CommunicationProtocol.SERVER_IP_ADDRESS,
+                    CommunicationProtocol.SERVER_PORT
+            );
             ServerSocket server = serverChannel.socket();
             server.bind(address);
             serverChannel.configureBlocking(false); // server socket non bloccante

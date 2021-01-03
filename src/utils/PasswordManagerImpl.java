@@ -10,8 +10,9 @@ import java.util.Random;
  * Created by alessiomatricardi on 02/01/21
  */
 public class PasswordManagerImpl implements PasswordManager {
+    // per generare numeri random, thread safe
     private static final Random RANDOM = new SecureRandom();
-    private static final int SALT_SIZE = 64;
+    private static final int SALT_SIZE = 64; // dimensione in byte del salt
 
     @Override
     public String getSalt() {

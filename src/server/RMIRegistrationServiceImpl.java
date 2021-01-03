@@ -1,5 +1,6 @@
-package worth;
+package worth.server;
 
+import worth.CommunicationProtocol;
 import worth.exceptions.PasswordTooShortException;
 import worth.exceptions.CharactersNotAllowedException;
 import worth.exceptions.UsernameNotAvailableException;
@@ -14,11 +15,11 @@ import java.rmi.server.UnicastRemoteObject;
  *
  * Implementazione del servizio RMI di registrazione
  */
-public class RegistrationServiceImpl extends UnicastRemoteObject implements RegistrationService {
+public class RMIRegistrationServiceImpl extends UnicastRemoteObject implements RMIRegistrationService {
     private Registration registration;
     private PasswordManager passwordManager;
 
-    public RegistrationServiceImpl(Registration registration) throws RemoteException {
+    public RMIRegistrationServiceImpl(Registration registration) throws RemoteException {
         super();
         this.registration = registration;
         passwordManager = new PasswordManagerImpl();
@@ -27,9 +28,9 @@ public class RegistrationServiceImpl extends UnicastRemoteObject implements Regi
     @Override
     public synchronized void register (String username, String password)
             throws RemoteException, CharactersNotAllowedException, UsernameNotAvailableException, PasswordTooShortException {
-        if (!username.matches(USERNAME_REGEX))
+        if (!username.matches(CommunicationProtocol.USERNAME_REGEX))
             throw new CharactersNotAllowedException();
-        if (password.length() < MIN_PASSWORD_LEN)
+        if (password.length() < CommunicationProtocol.MIN_PASSWORD_LEN)
             throw new PasswordTooShortException();
 
         String salt = passwordManager.getSalt();
