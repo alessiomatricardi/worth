@@ -1,8 +1,10 @@
-import exceptions.PasswordTooShortException;
-import exceptions.SpacesNotAllowedException;
-import exceptions.UsernameNotAvailableException;
-import utils.PasswordManager;
-import utils.PasswordManagerImpl;
+package worth;
+
+import worth.exceptions.PasswordTooShortException;
+import worth.exceptions.SpacesNotAllowedException;
+import worth.exceptions.UsernameNotAvailableException;
+import worth.utils.PasswordManager;
+import worth.utils.PasswordManagerImpl;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;

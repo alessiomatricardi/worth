@@ -1,6 +1,8 @@
-import exceptions.PasswordTooShortException;
-import exceptions.SpacesNotAllowedException;
-import exceptions.UsernameNotAvailableException;
+package worth;
+
+import worth.exceptions.PasswordTooShortException;
+import worth.exceptions.SpacesNotAllowedException;
+import worth.exceptions.UsernameNotAvailableException;
 
 
 /**

@@ -1,3 +1,5 @@
+package worth;
+
 /**
  * Created by alessiomatricardi on 02/01/21
  */
@@ -15,8 +17,8 @@ public class ServerMain {
         // callback RMI
 
         // gestione connessioni TCP
-        //SelectionTask selectionTask = new SelectionTask();
-        //new Thread(selectionTask).start();
+        SelectionTask selectionTask = new SelectionTask();
+        new Thread(selectionTask).start();
 
     }
 

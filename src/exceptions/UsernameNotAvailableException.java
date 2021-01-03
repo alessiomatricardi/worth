@@ -1,4 +1,4 @@
-package exceptions;
+package worth.exceptions;
 
 /**
  * Created by alessiomatricardi on 02/01/21

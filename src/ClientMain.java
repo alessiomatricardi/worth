@@ -1,21 +1,22 @@
-import client.ui.AuthUI;
+package worth;
+
+import worth.client.controller.AuthController;
+import worth.client.model.ClientModel;
+import worth.client.ui.AuthUI;
 
 import javax.swing.*;
+import java.io.IOException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 
 /**
  * Created by alessiomatricardi on 02/01/21
  */
 public class ClientMain {
 
-    public static void main(String[] args) throws RemoteException, NotBoundException {
-        Registry registry = LocateRegistry.getRegistry(RegistrationTask.REGISTRY_PORT);
+    public static void main(String[] args) {
 
-        RegistrationService service = (RegistrationService) registry.lookup(RegistrationService.REGISTRATION_SERVICE_NAME);
-
+        // setta UI di sistema
         try {
             UIManager.setLookAndFeel(
                     UIManager.getSystemLookAndFeelClassName());
@@ -23,48 +24,18 @@ public class ClientMain {
             e.printStackTrace();
         }
 
-        AuthUI ui = new AuthUI();
+        ClientModel model = null;
+        try {
+            model = new ClientModel();
+        } catch (IOException e) {
+            e.printStackTrace();
+            // non posso fare nulla
+            // todo joptionpane??
+            return;
+        }
 
-        /*try {
-            service.register("prova", "prova");
-            System.out.println("ok");
-        } catch (SpacesNotAllowedException e) {
-            e.printStackTrace();
-        } catch (UsernameNotAvailableException e) {
-            e.printStackTrace();
-        } catch (PasswordTooShortException e) {
-            e.printStackTrace();
-        }
-        try {
-            service.register("pr ova", "provaffffff");
-            System.out.println("ok");
-        } catch (SpacesNotAllowedException e) {
-            e.printStackTrace();
-        } catch (UsernameNotAvailableException e) {
-            e.printStackTrace();
-        } catch (PasswordTooShortException e) {
-            e.printStackTrace();
-        }
-        try {
-            service.register("prova", "provafffffff");
-            System.out.println("ok");
-        } catch (SpacesNotAllowedException e) {
-            e.printStackTrace();
-        } catch (UsernameNotAvailableException e) {
-            e.printStackTrace();
-        } catch (PasswordTooShortException e) {
-            e.printStackTrace();
-        }
-        try {
-            service.register("prova", "provahhhhhhhhh");
-            System.out.println("ok");
-        } catch (SpacesNotAllowedException e) {
-            e.printStackTrace();
-        } catch (UsernameNotAvailableException e) {
-            e.printStackTrace();
-        } catch (PasswordTooShortException e) {
-            e.printStackTrace();
-        }*/
+        AuthUI ui = new AuthUI();
+        AuthController authController = new AuthController(model, ui);
     }
 
 }

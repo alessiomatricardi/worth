@@ -1,4 +1,6 @@
-import exceptions.UsernameNotAvailableException;
+package worth;
+
+import worth.exceptions.UsernameNotAvailableException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +30,9 @@ public class PersistentData implements Registration {
     public static PersistentData init() {
         PersistentData persistentData = new PersistentData();
         // caricamento da locale degli utenti
+        File
         // caricamento da locale dei progetti
+
         return persistentData;
     }
 

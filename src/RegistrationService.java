@@ -1,6 +1,8 @@
-import exceptions.PasswordTooShortException;
-import exceptions.SpacesNotAllowedException;
-import exceptions.UsernameNotAvailableException;
+package worth;
+
+import worth.exceptions.PasswordTooShortException;
+import worth.exceptions.SpacesNotAllowedException;
+import worth.exceptions.UsernameNotAvailableException;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -20,6 +22,7 @@ public interface RegistrationService extends Remote {
      * @param username username dell'utente
      * @param password password dell'utente
      *
+     * @throws RemoteException se ci sono problemi legati alla connessione
      * @throws SpacesNotAllowedException se l'username contiene spazi
      * @throws UsernameNotAvailableException se l'username non è disponibile
      * @throws PasswordTooShortException se la dimensione della password è più corta di MIN_PASS_LEN

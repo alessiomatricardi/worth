@@ -1,3 +1,5 @@
+package worth;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -59,7 +61,7 @@ public class SelectionTask implements Runnable {
                             }
                             return;
                         }
-                    } else if (key.isReadable()) { // client ha scritto su channel, sono pronto a leggerlo
+                    } else if (key.isReadable() && false) { // client ha scritto su channel, sono pronto a leggerlo
                         SocketChannel client = (SocketChannel) key.channel();
 
                         ByteBuffer buffer = ByteBuffer.allocate(ALLOCATION_SIZE);
@@ -83,7 +85,7 @@ public class SelectionTask implements Runnable {
 
                         // preparo per scrittura su client
                         SelectionKey key2 = client.register(selector, SelectionKey.OP_WRITE, buffer);
-                    } else if (key.isWritable()) { // client aspetta scrittura su channel
+                    } else if (key.isWritable() && false) { // client aspetta scrittura su channel
                         // todo modificare
                         SocketChannel client = (SocketChannel) key.channel();
 

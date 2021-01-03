@@ -1,4 +1,4 @@
-package client.ui;
+package worth.client.ui;
 
 import javax.swing.*;
 import java.awt.*;
@@ -68,4 +68,21 @@ public class AuthUI {
         buttonsPanel.add(registerButton);
 
     }
+
+    public JTextField getUsernameTextField() {
+        return usernameTextField;
+    }
+
+    public JTextField getPasswordTextField() {
+        return passwordTextField;
+    }
+
+    public JButton getRegisterButton() {
+        return registerButton;
+    }
+
+    public JButton getLoginButton() {
+        return loginButton;
+    }
+
 }
