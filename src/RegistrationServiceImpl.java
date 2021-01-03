@@ -1,7 +1,7 @@
 package worth;
 
 import worth.exceptions.PasswordTooShortException;
-import worth.exceptions.SpacesNotAllowedException;
+import worth.exceptions.CharactersNotAllowedException;
 import worth.exceptions.UsernameNotAvailableException;
 import worth.utils.PasswordManager;
 import worth.utils.PasswordManagerImpl;
@@ -26,9 +26,9 @@ public class RegistrationServiceImpl extends UnicastRemoteObject implements Regi
 
     @Override
     public synchronized void register (String username, String password)
-            throws RemoteException, SpacesNotAllowedException, UsernameNotAvailableException, PasswordTooShortException {
-        if (username.contains(" "))
-            throw new SpacesNotAllowedException();
+            throws RemoteException, CharactersNotAllowedException, UsernameNotAvailableException, PasswordTooShortException {
+        if (!username.matches(USERNAME_REGEX))
+            throw new CharactersNotAllowedException();
         if (password.length() < MIN_PASSWORD_LEN)
             throw new PasswordTooShortException();
 

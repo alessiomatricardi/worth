@@ -3,11 +3,11 @@ package worth;
 import worth.client.controller.AuthController;
 import worth.client.model.ClientModel;
 import worth.client.ui.AuthUI;
+import worth.utils.Messages;
+import worth.utils.Utils;
 
 import javax.swing.*;
 import java.io.IOException;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
 
 /**
  * Created by alessiomatricardi on 02/01/21
@@ -24,14 +24,15 @@ public class ClientMain {
             e.printStackTrace();
         }
 
+        // crea model (logica client)
         ClientModel model = null;
         try {
             model = new ClientModel();
         } catch (IOException e) {
             e.printStackTrace();
-            // non posso fare nulla
-            // todo joptionpane??
-            return;
+            int input = Utils.showErrorMessageDialog(Messages.CONNECTION_REFUSED);
+            if (input == JOptionPane.OK_OPTION || input == JOptionPane.CLOSED_OPTION)
+                return;
         }
 
         AuthUI ui = new AuthUI();

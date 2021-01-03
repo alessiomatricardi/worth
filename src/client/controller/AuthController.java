@@ -2,8 +2,15 @@ package worth.client.controller;
 
 import worth.client.model.ClientModel;
 import worth.client.ui.AuthUI;
+import worth.exceptions.PasswordTooShortException;
+import worth.exceptions.CharactersNotAllowedException;
+import worth.exceptions.UsernameNotAvailableException;
+import worth.utils.Messages;
+import worth.utils.Utils;
 
 import javax.swing.*;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 
 /**
  * Created by alessiomatricardi on 03/01/21
@@ -31,25 +38,26 @@ public class AuthController {
         } catch (Exception e) {
             String response = e.getMessage();
             response.replaceFirst("^[0-9]+$", "");
-            JOptionPane.showMessageDialog (
-                    null,
-                    response,
-                    "Login error",
-                    JOptionPane.ERROR_MESSAGE
-            );
+            //Utils.showErrorMessageDialog(Messages.) todo
         }
     }
 
     private void register() {
         String username = this.view.getUsernameTextField().getText();
         String password = this.view.getPasswordTextField().getText();
-        //model.register(username, password); todo implementa
-        JOptionPane.showMessageDialog(
-                null,
-                "reg successfull",
-                "Info",
-                JOptionPane.INFORMATION_MESSAGE
-        );
+        try {
+            model.register(username, password);
+            Utils.showInfoMessageDialog(Messages.REGISTRATION_SUCCESSFUL);
+        } catch (NotBoundException | RemoteException e) {
+            e.printStackTrace();
+            Utils.showErrorMessageDialog(Messages.CONNECTION_ERROR);
+        } catch (UsernameNotAvailableException e) {
+            Utils.showErrorMessageDialog(Messages.USERNAME_NOT_AVAILABLE(username));
+        } catch (PasswordTooShortException e) {
+            Utils.showErrorMessageDialog(Messages.PASSWORD_TOO_SHORT);
+        } catch (CharactersNotAllowedException e) {
+            Utils.showErrorMessageDialog(Messages.CHARACTERS_NOT_ALLOWED);
+        }
     }
 
 }

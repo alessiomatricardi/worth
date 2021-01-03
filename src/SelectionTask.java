@@ -18,7 +18,7 @@ import java.util.Set;
 public class SelectionTask implements Runnable {
     public static final String SERVER_IP_ADDRESS = "localhost";
     public static final int SERVER_PORT = 2500; // porta del server
-    private static final int ALLOCATION_SIZE = 512*512; // size (in byte) per allocazione di un ByteBuffer
+    private static final int ALLOCATION_SIZE = 1024*1024; // size (in byte) per allocazione di un ByteBuffer
 
     public void run() {
         ServerSocketChannel serverChannel;
@@ -61,7 +61,7 @@ public class SelectionTask implements Runnable {
                             }
                             return;
                         }
-                    } else if (key.isReadable() && false) { // client ha scritto su channel, sono pronto a leggerlo
+                    } else if (key.isReadable()) { // client ha scritto su channel, sono pronto a leggerlo
                         SocketChannel client = (SocketChannel) key.channel();
 
                         ByteBuffer buffer = ByteBuffer.allocate(ALLOCATION_SIZE);
@@ -79,12 +79,12 @@ public class SelectionTask implements Runnable {
 
                         // preparo messaggio da inviare e lo salvo sul buffer
                         // todo modificare
-                        message.append("\nechoed by server\n");
-                        byte[] byteMessage = message.toString().getBytes(StandardCharsets.UTF_8);
-                        buffer = ByteBuffer.wrap(byteMessage);
+                        System.out.println(message);
+                        //byte[] byteMessage = message.toString().getBytes(StandardCharsets.UTF_8);
+                        //buffer = ByteBuffer.wrap(byteMessage);
 
                         // preparo per scrittura su client
-                        SelectionKey key2 = client.register(selector, SelectionKey.OP_WRITE, buffer);
+                        //SelectionKey key2 = client.register(selector, SelectionKey.OP_WRITE, buffer);
                     } else if (key.isWritable() && false) { // client aspetta scrittura su channel
                         // todo modificare
                         SocketChannel client = (SocketChannel) key.channel();

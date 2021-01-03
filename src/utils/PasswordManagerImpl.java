@@ -12,7 +12,6 @@ import java.util.Random;
 public class PasswordManagerImpl implements PasswordManager {
     private static final Random RANDOM = new SecureRandom();
     private static final int SALT_SIZE = 64;
-    private static final String ALGORITHM = "SHA3-256";
 
     @Override
     public String getSalt() {
@@ -31,7 +30,7 @@ public class PasswordManagerImpl implements PasswordManager {
             final byte[] allToBeHashed = Utils.concat(passwordBytes, saltBytes);
             final byte[] hashBytes = messageDigest.digest(allToBeHashed);
             digest = bytesToHex(hashBytes);
-        } catch (NoSuchAlgorithmException ignored) {}
+        } catch (NoSuchAlgorithmException ignored) {} // impossibile avvenga
         return digest;
     }
 

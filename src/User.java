@@ -1,11 +1,15 @@
 package worth;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
+import java.io.Serializable;
+
 /**
  * Created by alessiomatricardi on 02/01/21
  *
  * Utente di Worth
  */
-public class User {
+public class User implements Serializable {
     private String username;
     private String hash; // formato hashPassword:salt
 
@@ -13,6 +17,9 @@ public class User {
         this.username = username;
         this.hash = hashPassword;
     }
+
+    @JsonCreator
+    private User() {}
 
     public String getUsername() {
         return this.username;

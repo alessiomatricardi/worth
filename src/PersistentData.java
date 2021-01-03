@@ -1,7 +1,15 @@
 package worth;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import worth.exceptions.UsernameNotAvailableException;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,33 +22,112 @@ import java.util.concurrent.ConcurrentHashMap;
  * Funge da database per tutte le richieste di input/output
  */
 public class PersistentData implements Registration {
-    private final static String PROJECTS_FOLDER_PATH = "";
-    private final static String USERS_FOLDER_PATH = "";
+    private final static String STORAGE_FOLDER_PATH = "./storage/";
+    private final static String PROJECTS_FOLDER_PATH = STORAGE_FOLDER_PATH + "projects/";
+    private final static String USERS_FOLDER_PATH = STORAGE_FOLDER_PATH + "users/";
+    public static final int BUFFER_SIZE = 1024*1024; // spazio di allocazione del buffer
 
-    private final Map<String, User> users;
-    private final Map<String, Project> projects;
-    private final List<String> onlineUsers;
+    private Map<String, User> users;
+    private Map<String, Project> projects;
+    private List<String> onlineUsers;
 
-    private PersistentData() {
-        users = new ConcurrentHashMap<>();
-        projects = new ConcurrentHashMap<>();
-        onlineUsers = new ArrayList<>();
+    public PersistentData() throws IOException {
+        this.users = new ConcurrentHashMap<>();
+        this.projects = new ConcurrentHashMap<>();
+        this.onlineUsers = new ArrayList<>();
+        this.init();
     }
 
-    public static PersistentData init() {
-        PersistentData persistentData = new PersistentData();
-        // caricamento da locale degli utenti
-        File
-        // caricamento da locale dei progetti
+    private void init() throws IOException {
+        System.out.println("Server data initialization - start");
 
-        return persistentData;
+        // gestione delle cartelle
+        File directory = new File(STORAGE_FOLDER_PATH);
+        if (!directory.exists()){
+            directory.mkdirs();
+            System.out.format("Folder %s created\n", STORAGE_FOLDER_PATH);
+        }
+        directory = new File(PROJECTS_FOLDER_PATH);
+        if (!directory.exists()){
+            directory.mkdirs();
+            System.out.format("Folder %s created\n", PROJECTS_FOLDER_PATH);
+        }
+        directory = new File(USERS_FOLDER_PATH);
+        if (!directory.exists()){
+            directory.mkdirs();
+            System.out.format("Folder %s created\n", USERS_FOLDER_PATH);
+        }
+
+        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+        ObjectMapper mapper = new ObjectMapper();
+        FileChannel inChannel;
+
+        // caricamento da locale degli utenti
+        int numOfUsers = 0;
+        directory = new File(USERS_FOLDER_PATH);
+        File[] usersList = directory.listFiles(File::isFile);
+        if (usersList != null) {
+            for (File userFile : usersList) {
+                buffer.clear();
+                inChannel= FileChannel.open(Paths.get(userFile.getAbsolutePath()), StandardOpenOption.READ);
+                boolean stop = false;
+                while (!stop) {
+                    if (inChannel.read(buffer) == -1){
+                        stop = true;
+                    }
+                }
+                buffer.flip();
+                // lettura dal buffer dell'utente
+                User user = mapper.reader().forType(new TypeReference<User>() {})
+                        .readValue(buffer.array());
+                this.users.put(user.getUsername(), user);
+                ++numOfUsers;
+            }
+        }
+
+        // caricamento da locale dei progetti todo
+        int numOfProjects = 0;
+        /*directory = new File(PROJECTS_FOLDER_PATH);
+        File[] projectsList = directory.listFiles(File::isDirectory);
+        if (projectsList != null) {
+            for (File project : projectsList) {
+                File projectFile =
+                inChannel= FileChannel.open(Paths.get(user.getAbsolutePath()), StandardOpenOption.READ);
+                boolean stop = false;
+                while (!stop) {
+                    if (inChannel.read(buffer) == -1){
+                        stop = true;
+                    }
+                }
+            }
+            this.users = mapper.reader()
+                    .forType(new TypeReference<Map<String, User>>() {})
+                    .readValue(buffer.array());	 // lettura dal buffer
+            numOfProjects++;
+        }*/
+
+        System.out.format("%d users retrieved\n", numOfUsers);
+        System.out.format("%d projects retrieved\n", numOfProjects);
+        System.out.println("Server data initialization - successful");
     }
 
     @Override
     public void registerUser(String username, String hash) throws UsernameNotAvailableException {
         User newUser = new User(username, hash);
-        if (users.putIfAbsent(username, newUser) != null)
+        if (this.users.putIfAbsent(username, newUser) != null)
             throw new UsernameNotAvailableException();
-        // todo crea file
+        String fileName = USERS_FOLDER_PATH + username + ".json";
+        // salvataggio dell'utente su file
+        ObjectMapper mapper = new ObjectMapper();
+        try (FileChannel outChannel = FileChannel.open(Paths.get(fileName), StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
+            byte[] byteUser = mapper.writeValueAsBytes(newUser);
+
+            ByteBuffer bb = ByteBuffer.wrap(byteUser);
+            while (bb.hasRemaining())
+                outChannel.write(bb);
+        } catch (IOException e) {
+            e.printStackTrace();
+            this.users.remove(username);
+        }
     }
 }

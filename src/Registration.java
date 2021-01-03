@@ -1,7 +1,5 @@
 package worth;
 
-import worth.exceptions.PasswordTooShortException;
-import worth.exceptions.SpacesNotAllowedException;
 import worth.exceptions.UsernameNotAvailableException;
 
 
