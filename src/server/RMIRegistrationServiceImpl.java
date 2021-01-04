@@ -35,8 +35,7 @@ public class RMIRegistrationServiceImpl extends UnicastRemoteObject implements R
 
         String salt = passwordManager.getSalt();
         String hash = passwordManager.hash(password, salt);
-        String passToBeSaved = hash + ":" + salt;
 
-        registration.registerUser(username, passToBeSaved);
+        registration.registerUser(username, hash, salt);
     }
 }

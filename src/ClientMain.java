@@ -3,7 +3,7 @@ package worth;
 import worth.client.controller.AuthController;
 import worth.client.model.ClientModel;
 import worth.client.ui.AuthUI;
-import worth.utils.Messages;
+import worth.utils.UIMessages;
 import worth.utils.Utils;
 
 import javax.swing.*;
@@ -30,7 +30,7 @@ public class ClientMain {
             model = new ClientModel();
         } catch (IOException e) {
             e.printStackTrace();
-            int input = Utils.showErrorMessageDialog(Messages.CONNECTION_REFUSED);
+            int input = Utils.showErrorMessageDialog(UIMessages.CONNECTION_REFUSED);
             if (input == JOptionPane.OK_OPTION || input == JOptionPane.CLOSED_OPTION)
                 return;
         }

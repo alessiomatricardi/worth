@@ -4,9 +4,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import worth.Project;
 import worth.User;
+import worth.exceptions.UserNotExistsException;
 import worth.exceptions.UsernameNotAvailableException;
+import worth.exceptions.WrongPasswordException;
+import worth.utils.PasswordManager;
+import worth.utils.PasswordManagerImpl;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -23,11 +28,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * Classe contenente tutti i dati dell'applicazione Worth
  * Funge da database per tutte le richieste di input/output
  */
-public class PersistentData implements Registration {
+public class PersistentData implements Registration, TCPOperations {
     private final static String STORAGE_FOLDER_PATH = "./storage/";
     private final static String PROJECTS_FOLDER_PATH = STORAGE_FOLDER_PATH + "projects/";
     private final static String USERS_FOLDER_PATH = STORAGE_FOLDER_PATH + "users/";
-    public static final int BUFFER_SIZE = 1024*1024; // spazio di allocazione del buffer
+    private static final int BUFFER_SIZE = 1024*1024; // spazio di allocazione del buffer
 
     private Map<String, User> users;
     private Map<String, Project> projects;
@@ -67,7 +72,12 @@ public class PersistentData implements Registration {
         // caricamento da locale degli utenti
         int numOfUsers = 0;
         directory = new File(USERS_FOLDER_PATH);
-        File[] usersList = directory.listFiles(File::isFile);
+        File[] usersList = directory.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                return pathname.isFile() && pathname.getPath().endsWith(".json");
+            }
+        });
         if (usersList != null) {
             for (File userFile : usersList) {
                 buffer.clear();
@@ -114,8 +124,8 @@ public class PersistentData implements Registration {
     }
 
     @Override
-    public void registerUser(String username, String hash) throws UsernameNotAvailableException {
-        User newUser = new User(username, hash);
+    public void registerUser(String username, String hash, String salt) throws UsernameNotAvailableException {
+        User newUser = new User(username, hash, salt);
         if (this.users.putIfAbsent(username, newUser) != null)
             throw new UsernameNotAvailableException();
         String fileName = USERS_FOLDER_PATH + username + ".json";
@@ -130,6 +140,21 @@ public class PersistentData implements Registration {
         } catch (IOException e) {
             e.printStackTrace();
             this.users.remove(username);
+        }
+    }
+
+    @Override
+    public void login(String username, String password) throws UserNotExistsException, WrongPasswordException {
+        User theUser = this.users.get(username);
+        if (theUser == null) {
+            throw new UserNotExistsException();
+        } else {
+            String hash = theUser.getHash();
+            String salt = theUser.getSalt();
+            PasswordManager passwordManager = new PasswordManagerImpl();
+            if (!passwordManager.isExpectedPassword(password, salt, hash))
+                throw new WrongPasswordException();
+            // todo user is online
         }
     }
 }

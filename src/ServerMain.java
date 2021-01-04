@@ -30,7 +30,7 @@ public class ServerMain {
         // callback RMI
 
         // gestione connessioni TCP
-        SelectionTask selectionTask = new SelectionTask();
+        SelectionTask selectionTask = new SelectionTask(data);
         new Thread(selectionTask).start();
 
     }

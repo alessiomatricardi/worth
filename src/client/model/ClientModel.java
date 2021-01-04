@@ -1,12 +1,11 @@
 package worth.client.model;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import worth.CommunicationProtocol;
+import worth.ResponseMessage;
+import worth.exceptions.*;
 import worth.server.RMIRegistrationService;
-import worth.server.RegistrationTask;
-import worth.server.SelectionTask;
-import worth.exceptions.PasswordTooShortException;
-import worth.exceptions.CharactersNotAllowedException;
-import worth.exceptions.UsernameNotAvailableException;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -23,9 +22,10 @@ import java.util.Base64;
  * Created by alessiomatricardi on 03/01/21
  */
 public class ClientModel {
-    private final static String SUCCESS_CODE = "0";
+    private static final int ALLOCATION_SIZE = 1024*1024; // spazio di allocazione del buffer
     private String username;
     private SocketChannel socket;
+    private ObjectMapper mapper;
 
     // predispone la connessione del client con il server
     public ClientModel() throws IOException {
@@ -37,6 +37,7 @@ public class ClientModel {
                 CommunicationProtocol.SERVER_PORT
         );
         this.socket.connect(address); // bloccante per il client
+        this.mapper = new ObjectMapper();
     }
 
     public void register(String username, String password)
@@ -50,40 +51,51 @@ public class ClientModel {
         regService.register(username, password);
     }
 
-    public void login(String username, String password) throws Exception {
-        String messageToSend = this.encodeMessageParams("login", username, password); // todo macro for commands
-        String response = this.sendTCPMessage(messageToSend);
-        if (!response.startsWith(SUCCESS_CODE)) { // todo macros???
-            throw new Exception(response);
+    public void login(String username, String password)
+            throws UserNotExistsException, WrongPasswordException, CommunicationException {
+        String messageToSend = this.encodeMessageArguments(
+                CommunicationProtocol.LOGIN_CMD,
+                username,
+                password
+        );
+        ResponseMessage response = null;
+        try {
+            response = this.sendTCPMessage(messageToSend);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new CommunicationException();
+        }
+        switch (response.getStatusCode()) {
+            case CommunicationProtocol.LOGIN_USERNOTEXISTS -> throw new UserNotExistsException();
+            case CommunicationProtocol.LOGIN_WRONGPWD -> throw new WrongPasswordException();
+            case CommunicationProtocol.LOGIN_COMMUNICATION_ERROR  -> throw new CommunicationException();
         }
     }
 
     // todo interface
-    private String encodeMessageParams(String command, String... params) {
+    private String encodeMessageArguments(String command, String... args) {
         StringBuilder toReturn = new StringBuilder(command);
-        for (String param : params) {
-            String encoded = Base64.getEncoder().encodeToString(param.getBytes());
-            toReturn.append(" ").append(encoded);
+        for (String arg : args) {
+            String encoded = Base64.getEncoder().encodeToString(arg.getBytes());
+            toReturn.append(CommunicationProtocol.SEPARATOR).append(encoded);
         }
         return toReturn.toString();
     }
 
     // todo interface
-    private String sendTCPMessage(String messageToSend) throws IOException {
+    private ResponseMessage sendTCPMessage(String messageToSend) throws IOException {
         byte[] byteMessage = messageToSend.getBytes(StandardCharsets.UTF_8);
-        ByteBuffer buffer = ByteBuffer.wrap(byteMessage);
-        socket.write(buffer);
-        buffer.clear();
+        ByteBuffer sendBuffer = ByteBuffer.wrap(byteMessage);
+        socket.write(sendBuffer);
+        sendBuffer.clear();
 
         // attendo risposta server
-        StringBuilder response = new StringBuilder();
-        while(socket.read(buffer) > 0) {
-            buffer.flip();
-
-            response.append(StandardCharsets.UTF_8.decode(buffer).toString());
-
-            buffer.clear();
-        }
-        return response.toString();
+        ByteBuffer readBuffer = ByteBuffer.allocate(ALLOCATION_SIZE);
+        socket.read(readBuffer);
+        readBuffer.flip();
+        String stringResponse = StandardCharsets.UTF_8.decode(readBuffer).toString();
+        System.out.println(stringResponse);
+        ResponseMessage response = this.mapper.readValue(stringResponse, new TypeReference<ResponseMessage>() {});
+        return response;
     }
 }

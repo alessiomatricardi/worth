@@ -5,7 +5,7 @@ package worth.utils;
  *
  * Messaggi di sistema
  */
-public class Messages {
+public class UIMessages {
 
     // messaggio "errore generico"
     public static final String GENERIC_ERROR = "Sorry, we encountered an error.\n" +
@@ -23,6 +23,9 @@ public class Messages {
             "The entered password is too short.\n" +
             "For your security, insert a password with at least 8 characters";
 
+    // messaggio "password sbagliata"
+    public static String PASSWORD_WRONG = "Entered password is wrong";
+
     // messaggio "caratteri non consentiti"
     public static final String CHARACTERS_NOT_ALLOWED =
             "We're sorry, but this field contains some characters not allowed.\n" +
@@ -34,7 +37,10 @@ public class Messages {
                 "Please try with another one :)";
     }
 
+    // messaggio "username inesistente"
+    public static final String USERNAME_NOT_EXISTS = "This username does not exists";
+
     // messaggio "registrazione riuscita con successo"
-    public static String REGISTRATION_SUCCESSFUL = "Registration successful";
+    public static final String REGISTRATION_SUCCESSFUL = "Registration successful";
 
 }

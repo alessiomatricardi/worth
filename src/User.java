@@ -11,11 +11,13 @@ import java.io.Serializable;
  */
 public class User implements Serializable {
     private String username;
-    private String hash; // formato hashPassword:salt
+    private String hash;
+    private String salt;
 
-    public User(String username, String hashPassword) {
+    public User(String username, String hashPassword, String salt) {
         this.username = username;
         this.hash = hashPassword;
+        this.salt = salt;
     }
 
     @JsonCreator
@@ -27,6 +29,10 @@ public class User implements Serializable {
 
     public String getHash() {
         return this.hash;
+    }
+
+    public String getSalt() {
+        return this.salt;
     }
 
     @Override
