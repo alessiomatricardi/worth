@@ -31,12 +31,26 @@ public abstract class CommunicationProtocol {
     // carattere separatore
     public static final String SEPARATOR = " ";
 
+    /**
+    * COMANDI E CODICI DI ERRORI DURANTE LA COMUNICAZIONE TCP
+    */
+
+    // codice non identificato, utilizzato come valore di base prima di calcolare il vero codice
+    public static final int UNKNOWN = -1;
+
+    // operazione avvenuta con successo
+    public static final int OP_SUCCESS = 0;
+
+    // codice che identifica un errore nei messaggi di risposta
+    public static final int COMMUNICATION_ERROR = 100;
+
+    // l'utente non esiste
+    public static final int USER_NOT_EXISTS = 101;
+
+
     public static final String LOGIN_CMD = "login";
-    public static final int LOGIN_SUCCESS = 0;
-    public static final int LOGIN_USERNOTEXISTS = 1;
-    public static final int LOGIN_WRONGPWD = 2;
-    public static final int LOGIN_COMMUNICATION_ERROR = 3;
-    public static final int LOGIN_ALREADY_LOGGED = 4;
+    public static final int LOGIN_WRONGPWD = 1;
+    public static final int LOGIN_ALREADY_LOGGED = 2;
 
     public static final String LOGOUT_CMD = "logout";
 

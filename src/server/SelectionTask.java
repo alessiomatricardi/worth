@@ -77,11 +77,20 @@ public class SelectionTask implements Runnable {
                             }
                             return;
                         }
-                    } else if (key.isReadable()) { // client ha scritto su channel, sono pronto a leggerlo
+                    } else if (key.isReadable()) {
+                        // client ha scritto su channel, sono pronto a leggerlo
                         SocketChannel client = (SocketChannel) key.channel();
 
-                        ByteBuffer buffer = (ByteBuffer) key.attachment();
+                        Attachment attachment = (Attachment) key.attachment();
 
+                        // la prima volta l'attachment sarà null, lo istanzio
+                        if (attachment == null) {
+                            attachment = new Attachment();
+                        }
+
+                        ByteBuffer buffer = attachment.getBuffer();
+
+                        // null la prima volta, poi sarà sempre allocato
                         if (buffer == null) {
                             buffer = ByteBuffer.allocate(ALLOCATION_SIZE);
                         }
@@ -89,62 +98,84 @@ public class SelectionTask implements Runnable {
                         // read message from channel
 
                         int byteReaded = client.read(buffer);
+
+                        // è stata chiusa la connessione dal client
                         if (byteReaded == -1) {
+                            // se utente loggato, devo fare logout
+                            String username = attachment.getUsername();
+                            if (username != null) {
+                                try {
+                                    data.logout(username);
+
+                                    // notifico altri utenti che username è offline
+                                    callbackService.notifyUsers(username, UserStatus.OFFLINE);
+                                } catch (UserNotExistsException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                             key.cancel();
                             client.close();
                             continue;
                         }
+
                         buffer.flip();
                         String messageReceived = StandardCharsets.UTF_8.decode(buffer).toString();
 
+                        // splitto messaggio attraverso separatore
                         String[] tokens = messageReceived.split(CommunicationProtocol.SEPARATOR);
-                        List<String> arguments = this.decodeMessageArguments(tokens);
+                        String command = tokens[0]; // la prima stringa è il comando
 
-                        // prepara messaggio di risposta
-                        ResponseMessage response = null;
+                        List<String> arguments = this.decodeMessageArguments(tokens); // decodifico altre stringhe
 
-                        switch (tokens[0]) {
+                        // preparo response code
+                        int responseCode = CommunicationProtocol.UNKNOWN;
+                        // preparo response body
+                        String responseBody = null;
+
+                        switch (command) {
                             case CommunicationProtocol.LOGIN_CMD: {
+                                // controllo numero di parametri
                                 if (arguments.size() != 2) {
-                                    response = new ResponseMessage(
-                                            CommunicationProtocol.LOGIN_COMMUNICATION_ERROR,
-                                            null
-                                    );
+                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
                                     break;
                                 }
+
                                 String username = arguments.get(0);
                                 String hash = arguments.get(1);
                                 try {
                                     data.login(username, hash);
+
+                                    // corpo risposta: lista utenti e loro stato
                                     Map<String, UserStatus> userStatus = data.getUserStatus();
-                                    String responseBody = this.mapper.writeValueAsString(userStatus);
-                                    response = new ResponseMessage(
-                                            CommunicationProtocol.LOGIN_SUCCESS,
-                                            responseBody
-                                    );
+                                    responseBody = this.mapper.writeValueAsString(userStatus);
+
                                     // notifica gli utenti che ora l'utente 'username' è online
                                     callbackService.notifyUsers(username, UserStatus.ONLINE);
+
+                                    // inserisco negli attachment il nome utente
+                                    attachment.setUsername(username);
                                 } catch (UserNotExistsException e) {
-                                    response = new ResponseMessage(
-                                            CommunicationProtocol.LOGIN_USERNOTEXISTS,
-                                            null
-                                    );
+                                    responseCode = CommunicationProtocol.USER_NOT_EXISTS;
                                 } catch (AlreadyLoggedException e) {
-                                    response = new ResponseMessage(
-                                            CommunicationProtocol.LOGIN_ALREADY_LOGGED,
-                                            null
-                                    );
+                                    responseCode = CommunicationProtocol.LOGIN_ALREADY_LOGGED;
                                 }catch (WrongPasswordException e) {
-                                    response = new ResponseMessage(
-                                            CommunicationProtocol.LOGIN_WRONGPWD,
-                                            null
-                                    );
+                                    responseCode = CommunicationProtocol.LOGIN_WRONGPWD;
                                 }
                                 break;
                             }
-                            /* todo
                             case CommunicationProtocol.LOGOUT_CMD: {
-                                // todo1
+                                // il nome utente viene prelevato direttamente dal server
+                                String username = attachment.getUsername();
+                                if (username != null) {
+                                    try {
+                                        data.logout(username);
+
+                                        // notifico altri utenti che username è offline
+                                        callbackService.notifyUsers(username, UserStatus.OFFLINE);
+                                    } catch (UserNotExistsException e) {
+                                        responseCode = CommunicationProtocol.USER_NOT_EXISTS;
+                                    }
+                                }
                                 break;
                             }
                             case CommunicationProtocol.CREATEPROJECT_CMD: {
@@ -170,19 +201,34 @@ public class SelectionTask implements Runnable {
                             case CommunicationProtocol.CANCELPROJECT_CMD: {
                                 // todo1
                                 break;
-                            }*/
+                            }
                         }
 
-                        // preparo messaggio da inviare e lo salvo sul buffer
+                        // se codice ancora non identificato => successo
+                        if (responseCode == CommunicationProtocol.UNKNOWN) {
+                            responseCode = CommunicationProtocol.OP_SUCCESS;
+                        }
+
+                        ResponseMessage response = new ResponseMessage(
+                                responseCode,
+                                responseBody
+                        );
+
+                        // preparo messaggio da inviare
                         byte[] byteResponse = mapper.writeValueAsBytes(response);
                         buffer = ByteBuffer.wrap(byteResponse);
 
+                        // salvo il buffer negli attachment
+                        attachment.setBuffer(buffer);
+
                         // preparo per scrittura su client
-                        SelectionKey key2 = client.register(selector, SelectionKey.OP_WRITE, buffer);
+                        SelectionKey key2 = client.register(selector, SelectionKey.OP_WRITE, attachment);
                     } else if (key.isWritable()) { // client aspetta scrittura su channel
                         SocketChannel client = (SocketChannel) key.channel();
 
-                        ByteBuffer buffer = (ByteBuffer) key.attachment();
+                        Attachment attachment = (Attachment) key.attachment();
+
+                        ByteBuffer buffer = attachment.getBuffer();
 
                         try {
                             client.write(buffer);
@@ -194,7 +240,7 @@ public class SelectionTask implements Runnable {
                             buffer.clear();
 
                         // preparo per prossima lettura da client
-                        SelectionKey key2 = client.register(selector, SelectionKey.OP_READ, buffer);
+                        SelectionKey key2 = client.register(selector, SelectionKey.OP_READ, attachment);
                     }
                 }
             }

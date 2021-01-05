@@ -166,6 +166,16 @@ public class PersistentData implements Registration, TCPOperations {
     }
 
     @Override
+    public void logout(String username) throws UserNotExistsException {
+        User theUser = this.users.get(username);
+        if (theUser == null) {
+            throw new UserNotExistsException();
+        } else {
+            this.userStatus.replace(username, UserStatus.OFFLINE);
+        }
+    }
+
+    @Override
     public Map<String, UserStatus> getUserStatus() {
         return this.userStatus;
     }

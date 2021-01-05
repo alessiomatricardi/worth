@@ -30,15 +30,14 @@ import java.util.Map;
  */
 public class ClientModel {
     private static final int ALLOCATION_SIZE = 1024*1024; // spazio di allocazione del buffer
-    private String username;
-    private SocketChannel socket;
-    private ObjectMapper mapper;
-    private Map<String, UserStatus> userStatus;
-    private RMICallbackNotify callbackNotify;
+
+    private SocketChannel socket;               // socket per instaurazione connessione
+    private ObjectMapper mapper;                // mapper per serializzazione/deserializzazione
+    private Map<String, UserStatus> userStatus; // lista degli stati degli utenti
+    private RMICallbackNotify callbackNotify;   // gestione callback
 
     // predispone la connessione del client con il server
     public ClientModel() throws IOException {
-        this.username = null;
         // apre connessione TCP con il server
         this.socket = SocketChannel.open();
         InetSocketAddress address = new InetSocketAddress(
@@ -64,37 +63,59 @@ public class ClientModel {
 
     public void login(String username, String password)
             throws UserNotExistsException, AlreadyLoggedException, WrongPasswordException, CommunicationException {
+        // prepara messaggio da inviare
         String messageToSend = this.encodeMessageArguments(
                 CommunicationProtocol.LOGIN_CMD,
                 username,
                 password
         );
+
         ResponseMessage response = null;
-        try {
-            response = this.sendTCPRequest(messageToSend);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new CommunicationException();
-        }
-        switch (response.getStatusCode()) {
-            case CommunicationProtocol.LOGIN_USERNOTEXISTS -> throw new UserNotExistsException();
+        response = this.sendTCPRequest(messageToSend);
+
+        switch (response.getStatusCode()) { // casi di errori
+            case CommunicationProtocol.USER_NOT_EXISTS -> throw new UserNotExistsException();
             case CommunicationProtocol.LOGIN_WRONGPWD -> throw new WrongPasswordException();
-            case CommunicationProtocol.LOGIN_COMMUNICATION_ERROR  -> throw new CommunicationException();
+            case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
             case CommunicationProtocol.LOGIN_ALREADY_LOGGED  -> throw new AlreadyLoggedException();
         }
+
         // è andato tutto bene
         try {
+            // salvo la risposta del server
             this.userStatus = this.mapper.readValue(
                     response.getResponseBody(),
                     new TypeReference<Map<String, UserStatus>>() {
                     }
             );
+
             // richiedo registrazione a servizio di callback
             this.registerForCallback();
         } catch (IOException | NotBoundException e) {
             e.printStackTrace();
         }
-        this.username = username; // salvo username dell'utente loggato
+    }
+
+    public void logout() throws UserNotExistsException, CommunicationException {
+        // prepara messaggio da inviare
+        String messageToSend = this.encodeMessageArguments(
+                CommunicationProtocol.LOGOUT_CMD
+        );
+
+        ResponseMessage response = null;
+        response = this.sendTCPRequest(messageToSend);
+
+        // casi di errori
+        if (response.getStatusCode() == CommunicationProtocol.USER_NOT_EXISTS) {
+            throw new UserNotExistsException();
+        }
+
+        // richiedo de-registrazione a servizio di callback
+        try {
+            this.unregisterForCallback();
+        } catch (RemoteException | NotBoundException e) {
+            e.printStackTrace();
+        }
     }
 
     // todo interface
@@ -108,28 +129,34 @@ public class ClientModel {
     }
 
     // todo interface
-    private ResponseMessage sendTCPRequest(String messageToSend) throws IOException {
-        byte[] byteMessage = messageToSend.getBytes(StandardCharsets.UTF_8);
-        ByteBuffer sendBuffer = ByteBuffer.wrap(byteMessage);
-        socket.write(sendBuffer);
-        sendBuffer.clear();
+    private ResponseMessage sendTCPRequest(String messageToSend) throws CommunicationException {
+        try {
+            byte[] byteMessage = messageToSend.getBytes(StandardCharsets.UTF_8);
+            ByteBuffer sendBuffer = ByteBuffer.wrap(byteMessage);
+            socket.write(sendBuffer);
+            sendBuffer.clear();
 
-        // attendo risposta server
-        ByteBuffer readBuffer = ByteBuffer.allocate(ALLOCATION_SIZE);
-        socket.read(readBuffer);
-        /* todo guarda non bloccante
-        * int total = 0;
-        * while (true) {
-        *   int readed = socket.read(readBuffer);
-        *   total += readed;
-        *   if (readed == 0 && total > 0) break;
-        * }
-        * */
-        readBuffer.flip();
-        String stringResponse = StandardCharsets.UTF_8.decode(readBuffer).toString();
-        System.out.println(stringResponse);
-        ResponseMessage response = this.mapper.readValue(stringResponse, new TypeReference<ResponseMessage>() {});
-        return response;
+            // attendo risposta server
+            ByteBuffer readBuffer = ByteBuffer.allocate(ALLOCATION_SIZE);
+            socket.read(readBuffer);
+            /* todo guarda non bloccante
+             * int total = 0;
+             * while (true) {
+             *   int readed = socket.read(readBuffer);
+             *   total += readed;
+             *   if (readed == 0 && total > 0) break;
+             * }
+             * */
+            readBuffer.flip();
+            String stringResponse = StandardCharsets.UTF_8.decode(readBuffer).toString();
+            System.out.println(stringResponse);
+            ResponseMessage response = this.mapper.readValue(stringResponse, new TypeReference<ResponseMessage>() {
+            });
+            return response;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new CommunicationException();
+        }
     }
 
     // todo interface

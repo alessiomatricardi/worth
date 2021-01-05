@@ -17,9 +17,8 @@ public interface TCPOperations { // todo interface
     void login(String username, String password)
             throws UserNotExistsException, AlreadyLoggedException, WrongPasswordException;
 
+    void logout(String username) throws UserNotExistsException;
     /*
-    void logout(String username);
-
     List<Project> listProjects();
 
     void createProject(String projectName);
