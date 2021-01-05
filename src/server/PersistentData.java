@@ -18,6 +18,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,7 +42,7 @@ public class PersistentData implements Registration, TCPOperations {
     public PersistentData() throws IOException {
         this.users = new ConcurrentHashMap<>();
         this.projects = new ConcurrentHashMap<>();
-        this.onlineUsers = new ArrayList<>();
+        this.onlineUsers = Collections.synchronizedList(new ArrayList<>());
         this.init();
     }
 
@@ -154,7 +155,7 @@ public class PersistentData implements Registration, TCPOperations {
             PasswordManager passwordManager = new PasswordManagerImpl();
             if (!passwordManager.isExpectedPassword(password, salt, hash))
                 throw new WrongPasswordException();
-            // todo user is online
+            onlineUsers.add(username);
         }
     }
 }

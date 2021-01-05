@@ -24,12 +24,15 @@ public class UIMessages {
             "For your security, insert a password with at least 8 characters";
 
     // messaggio "password sbagliata"
-    public static String PASSWORD_WRONG = "Entered password is wrong";
+    public static final String PASSWORD_WRONG = "Entered password is wrong";
 
     // messaggio "caratteri non consentiti"
     public static final String CHARACTERS_NOT_ALLOWED =
             "We're sorry, but this field contains some characters not allowed.\n" +
                     "Valid username should contain only alphanumeric characters, . - and _";
+
+    //
+    public static final String EMPTY_FIELD = "Some fields seems to be empty or blank.\n";
 
     // messaggio "username non disponibile"
     public static String USERNAME_NOT_AVAILABLE(String username) {

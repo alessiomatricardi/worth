@@ -18,7 +18,8 @@ public interface TCPOperations { // todo interface
 
     void login(String username, String password) throws UserNotExistsException, WrongPasswordException;
 
-    /*void logout(String username);
+    /*
+    void logout(String username);
 
     List<Project> listProjects();
 
@@ -37,6 +38,8 @@ public interface TCPOperations { // todo interface
     void moveCard(String projectName, String cardName, CardStatus from, CardStatus to);
 
     List<Movement> getCardHistory(String projectName, String cardName);
+
+    void readChat(String projectName);
 
     void cancelProject(String projectName);*/
 }

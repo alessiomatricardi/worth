@@ -19,7 +19,7 @@ public class RMIRegistrationServiceImpl extends UnicastRemoteObject implements R
     private Registration registration;
     private PasswordManager passwordManager;
 
-    public RMIRegistrationServiceImpl(Registration registration) throws RemoteException {
+    protected RMIRegistrationServiceImpl(Registration registration) throws RemoteException {
         super();
         this.registration = registration;
         passwordManager = new PasswordManagerImpl();

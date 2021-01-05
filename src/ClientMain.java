@@ -1,8 +1,11 @@
 package worth;
 
 import worth.client.controller.AuthController;
+import worth.client.controller.LoggedController;
 import worth.client.model.ClientModel;
 import worth.client.ui.AuthUI;
+import worth.client.ui.LoggedUI;
+import worth.client.ui.WorthFrame;
 import worth.utils.UIMessages;
 import worth.utils.Utils;
 
@@ -35,8 +38,16 @@ public class ClientMain {
                 return;
         }
 
-        AuthUI ui = new AuthUI();
-        AuthController authController = new AuthController(model, ui);
+        // crea pannello di autenticazione dell'utente
+        AuthUI authUI = new AuthUI();
+        AuthController authController = new AuthController(model, authUI);
+
+        // crea pannello di controllo dell'utente loggato
+        LoggedUI loggedUI = new LoggedUI();
+        LoggedController loggedController = new LoggedController(model, loggedUI);
+
+        // crea frame
+        WorthFrame frame = new WorthFrame(authUI, loggedUI);
     }
 
 }

@@ -6,11 +6,11 @@ import java.awt.*;
 /**
  * Created by alessiomatricardi on 02/01/21
  */
-public class AuthUI {
-    private final static String TITLE = "Worth";
+public class AuthUI extends JPanel {
+    private static final int WIDTH = 400; // larghezza del panel
+    private static final int HEIGHT = 160; // altezza del panel
 
     // componenti Java Swing
-    private JFrame frame;
     private JPanel usernamePanel;
     private JPanel passwordPanel;
     private JPanel buttonsPanel;
@@ -22,23 +22,18 @@ public class AuthUI {
     private JButton loginButton;
 
     public AuthUI() {
-        frame = new JFrame(TITLE);
-        frame.getContentPane().setLayout(new GridLayout(3, 1));
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(400, 180);
-        frame.setLocationRelativeTo(null);
-        frame.setResizable(false);
+        Dimension dim = new Dimension(WIDTH, HEIGHT);
+        this.setPreferredSize(dim);
+        this.setLayout(new GridLayout(3, 1));
 
         usernamePanel = new JPanel();
         passwordPanel = new JPanel();
         buttonsPanel = new JPanel();
-        frame.add(usernamePanel);
-        frame.add(passwordPanel);
-        frame.add(buttonsPanel);
+        this.add(usernamePanel);
+        this.add(passwordPanel);
+        this.add(buttonsPanel);
 
         initComponents();
-
-        frame.setVisible(true);
     }
 
     private void initComponents() {
@@ -66,7 +61,6 @@ public class AuthUI {
         buttonsPanel.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
         buttonsPanel.add(loginButton);
         buttonsPanel.add(registerButton);
-
     }
 
     public JTextField getUsernameTextField() {
@@ -83,6 +77,11 @@ public class AuthUI {
 
     public JButton getLoginButton() {
         return loginButton;
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(WIDTH, HEIGHT);
     }
 
 }

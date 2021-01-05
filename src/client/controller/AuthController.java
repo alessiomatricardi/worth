@@ -2,10 +2,12 @@ package worth.client.controller;
 
 import worth.client.model.ClientModel;
 import worth.client.ui.AuthUI;
+import worth.client.ui.WorthFrame;
 import worth.exceptions.*;
 import worth.utils.UIMessages;
 import worth.utils.Utils;
 
+import javax.swing.*;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
@@ -13,8 +15,8 @@ import java.rmi.RemoteException;
  * Created by alessiomatricardi on 03/01/21
  */
 public class AuthController {
-    private ClientModel model;
-    private AuthUI view;
+    private final ClientModel model;
+    private final AuthUI view;
 
     public AuthController(ClientModel model, AuthUI view) {
         this.model = model;
@@ -30,9 +32,13 @@ public class AuthController {
     private void login() {
         String username = this.view.getUsernameTextField().getText();
         String password = this.view.getPasswordTextField().getText();
+        if (username.isBlank() || password.isBlank()) {
+            Utils.showErrorMessageDialog(UIMessages.EMPTY_FIELD);
+            return;
+        }
         try {
             model.login(username, password);
-            Utils.showInfoMessageDialog("ok"); // todo rimuovi
+            this.changeContext();
         } catch (CommunicationException e) {
             Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
         } catch (UserNotExistsException e) {
@@ -45,6 +51,10 @@ public class AuthController {
     private void register() {
         String username = this.view.getUsernameTextField().getText();
         String password = this.view.getPasswordTextField().getText();
+        if (username.isBlank() || password.isBlank()) {
+            Utils.showErrorMessageDialog(UIMessages.EMPTY_FIELD);
+            return;
+        }
         try {
             model.register(username, password);
             Utils.showInfoMessageDialog(UIMessages.REGISTRATION_SUCCESSFUL);
@@ -58,6 +68,13 @@ public class AuthController {
         } catch (CharactersNotAllowedException e) {
             Utils.showErrorMessageDialog(UIMessages.CHARACTERS_NOT_ALLOWED);
         }
+    }
+
+    private void changeContext() {
+        WorthFrame frame = (WorthFrame) SwingUtilities.getWindowAncestor(this.view);
+        frame.getCardLayout().next(frame.getCardHolder());
+        frame.pack();
+        frame.setLocationRelativeTo(null);
     }
 
 }

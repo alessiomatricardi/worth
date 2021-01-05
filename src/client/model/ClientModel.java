@@ -92,6 +92,14 @@ public class ClientModel {
         // attendo risposta server
         ByteBuffer readBuffer = ByteBuffer.allocate(ALLOCATION_SIZE);
         socket.read(readBuffer);
+        /* todo guarda non bloccante
+        * int total = 0;
+        * while (true) {
+        *   int readed = socket.read(readBuffer);
+        *   total += readed;
+        *   if (readed == 0 && total > 0) break;
+        * }
+        * */
         readBuffer.flip();
         String stringResponse = StandardCharsets.UTF_8.decode(readBuffer).toString();
         System.out.println(stringResponse);
