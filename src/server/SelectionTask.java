@@ -1,10 +1,13 @@
 package worth.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import worth.CommunicationProtocol;
-import worth.ResponseMessage;
+import worth.data.UserStatus;
+import worth.exceptions.AlreadyLoggedException;
+import worth.protocol.CommunicationProtocol;
+import worth.protocol.ResponseMessage;
 import worth.exceptions.UserNotExistsException;
 import worth.exceptions.WrongPasswordException;
+import worth.server.rmi.RMICallbackServiceImpl;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -20,9 +23,13 @@ import java.util.*;
 public class SelectionTask implements Runnable {
     private static final int ALLOCATION_SIZE = 1024*1024; // size (in byte) per allocazione di un ByteBuffer
     private final TCPOperations data;
+    private final ObjectMapper mapper;
+    RMICallbackServiceImpl callbackService;
 
-    public SelectionTask(TCPOperations data) {
+    public SelectionTask(TCPOperations data, RMICallbackServiceImpl callbackService) {
         this.data = data;
+        this.callbackService = callbackService;
+        this.mapper = new ObjectMapper();
     }
 
     public void run() {
@@ -105,20 +112,29 @@ public class SelectionTask implements Runnable {
                                     );
                                     break;
                                 }
-                                String user = arguments.get(0);
+                                String username = arguments.get(0);
                                 String hash = arguments.get(1);
                                 try {
-                                    data.login(user, hash);
+                                    data.login(username, hash);
+                                    Map<String, UserStatus> userStatus = data.getUserStatus();
+                                    String responseBody = this.mapper.writeValueAsString(userStatus);
                                     response = new ResponseMessage(
                                             CommunicationProtocol.LOGIN_SUCCESS,
-                                            null
+                                            responseBody
                                     );
+                                    // notifica gli utenti che ora l'utente 'username' è online
+                                    callbackService.notifyUsers(username, UserStatus.ONLINE);
                                 } catch (UserNotExistsException e) {
                                     response = new ResponseMessage(
                                             CommunicationProtocol.LOGIN_USERNOTEXISTS,
                                             null
                                     );
-                                } catch (WrongPasswordException e) {
+                                } catch (AlreadyLoggedException e) {
+                                    response = new ResponseMessage(
+                                            CommunicationProtocol.LOGIN_ALREADY_LOGGED,
+                                            null
+                                    );
+                                }catch (WrongPasswordException e) {
                                     response = new ResponseMessage(
                                             CommunicationProtocol.LOGIN_WRONGPWD,
                                             null

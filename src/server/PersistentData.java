@@ -2,8 +2,10 @@ package worth.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import worth.Project;
-import worth.User;
+import worth.data.Project;
+import worth.data.User;
+import worth.data.UserStatus;
+import worth.exceptions.AlreadyLoggedException;
 import worth.exceptions.UserNotExistsException;
 import worth.exceptions.UsernameNotAvailableException;
 import worth.exceptions.WrongPasswordException;
@@ -17,9 +19,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,12 +36,12 @@ public class PersistentData implements Registration, TCPOperations {
 
     private Map<String, User> users;
     private Map<String, Project> projects;
-    private List<String> onlineUsers;
+    private Map<String, UserStatus> userStatus;
 
     public PersistentData() throws IOException {
         this.users = new ConcurrentHashMap<>();
         this.projects = new ConcurrentHashMap<>();
-        this.onlineUsers = Collections.synchronizedList(new ArrayList<>());
+        this.userStatus = new ConcurrentHashMap<>();
         this.init();
     }
 
@@ -94,6 +93,7 @@ public class PersistentData implements Registration, TCPOperations {
                 User user = mapper.reader().forType(new TypeReference<User>() {})
                         .readValue(buffer.array());
                 this.users.put(user.getUsername(), user);
+                this.userStatus.put(user.getUsername(), UserStatus.OFFLINE);
                 ++numOfUsers;
             }
         }
@@ -129,6 +129,7 @@ public class PersistentData implements Registration, TCPOperations {
         User newUser = new User(username, hash, salt);
         if (this.users.putIfAbsent(username, newUser) != null)
             throw new UsernameNotAvailableException();
+        this.userStatus.put(username, UserStatus.OFFLINE);
         String fileName = USERS_FOLDER_PATH + username + ".json";
         // salvataggio dell'utente su file
         ObjectMapper mapper = new ObjectMapper();
@@ -145,17 +146,27 @@ public class PersistentData implements Registration, TCPOperations {
     }
 
     @Override
-    public void login(String username, String password) throws UserNotExistsException, WrongPasswordException {
+    public void login(String username, String password)
+            throws UserNotExistsException, AlreadyLoggedException, WrongPasswordException {
         User theUser = this.users.get(username);
         if (theUser == null) {
             throw new UserNotExistsException();
         } else {
+            UserStatus status = this.userStatus.get(username);
+            if (status == UserStatus.ONLINE) {
+                throw new AlreadyLoggedException();
+            }
             String hash = theUser.getHash();
             String salt = theUser.getSalt();
             PasswordManager passwordManager = new PasswordManagerImpl();
             if (!passwordManager.isExpectedPassword(password, salt, hash))
                 throw new WrongPasswordException();
-            onlineUsers.add(username);
+            this.userStatus.replace(username, UserStatus.ONLINE);
         }
+    }
+
+    @Override
+    public Map<String, UserStatus> getUserStatus() {
+        return this.userStatus;
     }
 }

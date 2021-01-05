@@ -1,9 +1,11 @@
-package worth.server;
+package worth.server.rmi;
 
-import worth.CommunicationProtocol;
+import worth.data.UserStatus;
+import worth.protocol.CommunicationProtocol;
 import worth.exceptions.PasswordTooShortException;
 import worth.exceptions.CharactersNotAllowedException;
 import worth.exceptions.UsernameNotAvailableException;
+import worth.server.Registration;
 import worth.utils.PasswordManager;
 import worth.utils.PasswordManagerImpl;
 
@@ -17,10 +19,12 @@ import java.rmi.server.UnicastRemoteObject;
  */
 public class RMIRegistrationServiceImpl extends UnicastRemoteObject implements RMIRegistrationService {
     private Registration registration;
+    private RMICallbackServiceImpl callbackService;
     private PasswordManager passwordManager;
 
-    protected RMIRegistrationServiceImpl(Registration registration) throws RemoteException {
+    public RMIRegistrationServiceImpl(Registration registration, RMICallbackServiceImpl callbackService) throws RemoteException {
         super();
+        this.callbackService = callbackService;
         this.registration = registration;
         passwordManager = new PasswordManagerImpl();
     }
@@ -37,5 +41,8 @@ public class RMIRegistrationServiceImpl extends UnicastRemoteObject implements R
         String hash = passwordManager.hash(password, salt);
 
         registration.registerUser(username, hash, salt);
+
+        // notifica gli utenti che l'utente 'username' si è registrato
+        callbackService.notifyUsers(username, UserStatus.OFFLINE);
     }
 }

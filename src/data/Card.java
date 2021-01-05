@@ -1,4 +1,4 @@
-package worth;
+package worth.data;
 
 import java.io.Serializable;
 import java.util.ArrayList;

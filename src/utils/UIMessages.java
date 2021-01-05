@@ -43,6 +43,10 @@ public class UIMessages {
     // messaggio "username inesistente"
     public static final String USERNAME_NOT_EXISTS = "This username does not exists";
 
+    // messaggio "username già loggato"
+    public static final String USER_ALREADY_LOGGED = "Sorry, but seems that you're already logged in" +
+            " from another terminal or application window.";
+
     // messaggio "registrazione riuscita con successo"
     public static final String REGISTRATION_SUCCESSFUL = "Registration successful";
 

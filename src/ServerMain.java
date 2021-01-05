@@ -1,10 +1,12 @@
 package worth;
 
 import worth.server.PersistentData;
-import worth.server.RegistrationTask;
+import worth.server.RMITask;
 import worth.server.SelectionTask;
+import worth.server.rmi.RMICallbackServiceImpl;
 
 import java.io.IOException;
+import java.rmi.RemoteException;
 
 /**
  * Created by alessiomatricardi on 02/01/21
@@ -23,14 +25,24 @@ public class ServerMain {
             return;
         }
 
+        // creo oggetto per callback
+        RMICallbackServiceImpl callbackService;
+        try {
+            callbackService = new RMICallbackServiceImpl();
+        } catch (RemoteException e) {
+            System.out.println("RMI callback service initialization failed. Stack Trace: ");
+            e.printStackTrace();
+            return;
+        }
+
         // run task registrazione utenti
-        RegistrationTask registrationTask = new RegistrationTask(data);
+        RMITask registrationTask = new RMITask(data, callbackService);
         new Thread(registrationTask).start();
 
         // callback RMI
 
         // gestione connessioni TCP
-        SelectionTask selectionTask = new SelectionTask(data);
+        SelectionTask selectionTask = new SelectionTask(data, callbackService);
         new Thread(selectionTask).start();
 
     }

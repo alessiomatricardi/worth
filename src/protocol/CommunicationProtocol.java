@@ -1,4 +1,4 @@
-package worth;
+package worth.protocol;
 
 /**
  * Created by alessiomatricardi on 03/01/21
@@ -12,6 +12,9 @@ public abstract class CommunicationProtocol {
 
     // Nome del servizio di registrazione offerto da RMI
     public static final String REGISTRATION_SERVICE_NAME = "RegistrationService";
+
+    // Nome del servizio di callback offerto da RMI
+    public static final String CALLBACK_SERVICE_NAME = "CallbackService";
 
     // Lunghezza minima della password
     public static final int MIN_PASSWORD_LEN = 8;
@@ -33,6 +36,7 @@ public abstract class CommunicationProtocol {
     public static final int LOGIN_USERNOTEXISTS = 1;
     public static final int LOGIN_WRONGPWD = 2;
     public static final int LOGIN_COMMUNICATION_ERROR = 3;
+    public static final int LOGIN_ALREADY_LOGGED = 4;
 
     public static final String LOGOUT_CMD = "logout";
 

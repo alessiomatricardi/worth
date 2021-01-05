@@ -45,6 +45,8 @@ public class AuthController {
             Utils.showErrorMessageDialog(UIMessages.USERNAME_NOT_EXISTS);
         } catch (WrongPasswordException e) {
             Utils.showErrorMessageDialog(UIMessages.PASSWORD_WRONG);
+        } catch (AlreadyLoggedException e) {
+            Utils.showErrorMessageDialog(UIMessages.USER_ALREADY_LOGGED);
         }
     }
 

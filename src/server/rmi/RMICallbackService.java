@@ -1,6 +1,6 @@
-package worth.server;
+package worth.server.rmi;
 
-import worth.client.model.RMICallbackNotify;
+import worth.client.model.rmi.RMICallbackNotify;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

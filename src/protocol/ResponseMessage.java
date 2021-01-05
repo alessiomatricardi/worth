@@ -1,4 +1,4 @@
-package worth;
+package worth.protocol;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 

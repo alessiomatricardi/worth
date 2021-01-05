@@ -1,4 +1,4 @@
-package worth.server;
+package worth.server.rmi;
 
 import worth.exceptions.PasswordTooShortException;
 import worth.exceptions.CharactersNotAllowedException;

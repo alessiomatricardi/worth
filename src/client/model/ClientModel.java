@@ -2,10 +2,14 @@ package worth.client.model;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import worth.CommunicationProtocol;
-import worth.ResponseMessage;
+import worth.client.model.rmi.RMICallbackNotify;
+import worth.client.model.rmi.RMICallbackNotifyImpl;
+import worth.data.UserStatus;
+import worth.protocol.CommunicationProtocol;
+import worth.protocol.ResponseMessage;
 import worth.exceptions.*;
-import worth.server.RMIRegistrationService;
+import worth.server.rmi.RMICallbackService;
+import worth.server.rmi.RMIRegistrationService;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -17,6 +21,9 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by alessiomatricardi on 03/01/21
@@ -26,6 +33,8 @@ public class ClientModel {
     private String username;
     private SocketChannel socket;
     private ObjectMapper mapper;
+    private Map<String, UserStatus> userStatus;
+    private RMICallbackNotify callbackNotify;
 
     // predispone la connessione del client con il server
     public ClientModel() throws IOException {
@@ -38,6 +47,8 @@ public class ClientModel {
         );
         this.socket.connect(address); // bloccante per il client
         this.mapper = new ObjectMapper();
+        this.userStatus = Collections.synchronizedMap(new HashMap<>());
+        this.callbackNotify = new RMICallbackNotifyImpl(this.userStatus);
     }
 
     public void register(String username, String password)
@@ -52,7 +63,7 @@ public class ClientModel {
     }
 
     public void login(String username, String password)
-            throws UserNotExistsException, WrongPasswordException, CommunicationException {
+            throws UserNotExistsException, AlreadyLoggedException, WrongPasswordException, CommunicationException {
         String messageToSend = this.encodeMessageArguments(
                 CommunicationProtocol.LOGIN_CMD,
                 username,
@@ -60,7 +71,7 @@ public class ClientModel {
         );
         ResponseMessage response = null;
         try {
-            response = this.sendTCPMessage(messageToSend);
+            response = this.sendTCPRequest(messageToSend);
         } catch (IOException e) {
             e.printStackTrace();
             throw new CommunicationException();
@@ -69,7 +80,21 @@ public class ClientModel {
             case CommunicationProtocol.LOGIN_USERNOTEXISTS -> throw new UserNotExistsException();
             case CommunicationProtocol.LOGIN_WRONGPWD -> throw new WrongPasswordException();
             case CommunicationProtocol.LOGIN_COMMUNICATION_ERROR  -> throw new CommunicationException();
+            case CommunicationProtocol.LOGIN_ALREADY_LOGGED  -> throw new AlreadyLoggedException();
         }
+        // è andato tutto bene
+        try {
+            this.userStatus = this.mapper.readValue(
+                    response.getResponseBody(),
+                    new TypeReference<Map<String, UserStatus>>() {
+                    }
+            );
+            // richiedo registrazione a servizio di callback
+            this.registerForCallback();
+        } catch (IOException | NotBoundException e) {
+            e.printStackTrace();
+        }
+        this.username = username; // salvo username dell'utente loggato
     }
 
     // todo interface
@@ -83,7 +108,7 @@ public class ClientModel {
     }
 
     // todo interface
-    private ResponseMessage sendTCPMessage(String messageToSend) throws IOException {
+    private ResponseMessage sendTCPRequest(String messageToSend) throws IOException {
         byte[] byteMessage = messageToSend.getBytes(StandardCharsets.UTF_8);
         ByteBuffer sendBuffer = ByteBuffer.wrap(byteMessage);
         socket.write(sendBuffer);
@@ -106,4 +131,25 @@ public class ClientModel {
         ResponseMessage response = this.mapper.readValue(stringResponse, new TypeReference<ResponseMessage>() {});
         return response;
     }
+
+    // todo interface
+    private void registerForCallback() throws RemoteException, NotBoundException {
+        // realizza connessione RMI per il servizio di callback
+        Registry registry = LocateRegistry.getRegistry(CommunicationProtocol.REGISTRY_PORT);
+        RMICallbackService callbackService =
+                (RMICallbackService) registry.lookup(CommunicationProtocol.CALLBACK_SERVICE_NAME);
+        // registrazione al servizio
+        callbackService.registerForCallback(this.callbackNotify);
+    }
+
+    // todo interface
+    private void unregisterForCallback() throws RemoteException, NotBoundException {
+        // realizza connessione RMI per il servizio di callback
+        Registry registry = LocateRegistry.getRegistry(CommunicationProtocol.REGISTRY_PORT);
+        RMICallbackService callbackService =
+                (RMICallbackService) registry.lookup(CommunicationProtocol.CALLBACK_SERVICE_NAME);
+        // registrazione al servizio
+        callbackService.unregisterForCallback(this.callbackNotify);
+    }
+
 }

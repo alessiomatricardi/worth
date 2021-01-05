@@ -1,13 +1,11 @@
 package worth.server;
 
-import worth.Card;
-import worth.CardStatus;
-import worth.Movement;
-import worth.Project;
+import worth.data.UserStatus;
+import worth.exceptions.AlreadyLoggedException;
 import worth.exceptions.UserNotExistsException;
 import worth.exceptions.WrongPasswordException;
 
-import java.util.List;
+import java.util.Map;
 
 /**
  * Created by alessiomatricardi on 04/01/21
@@ -16,7 +14,8 @@ import java.util.List;
  */
 public interface TCPOperations { // todo interface
 
-    void login(String username, String password) throws UserNotExistsException, WrongPasswordException;
+    void login(String username, String password)
+            throws UserNotExistsException, AlreadyLoggedException, WrongPasswordException;
 
     /*
     void logout(String username);
@@ -42,4 +41,6 @@ public interface TCPOperations { // todo interface
     void readChat(String projectName);
 
     void cancelProject(String projectName);*/
+
+    Map<String, UserStatus> getUserStatus();
 }

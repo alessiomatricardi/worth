@@ -1,7 +1,7 @@
-package worth.server;
+package worth.server.rmi;
 
-import worth.RegisteredUser;
-import worth.client.model.RMICallbackNotify;
+import worth.data.UserStatus;
+import worth.client.model.rmi.RMICallbackNotify;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -16,7 +16,7 @@ import java.util.List;
 public class RMICallbackServiceImpl extends UnicastRemoteObject implements RMICallbackService {
     List<RMICallbackNotify> clients;
 
-    protected RMICallbackServiceImpl() throws RemoteException {
+    public RMICallbackServiceImpl() throws RemoteException {
         clients = new ArrayList<>();
     }
 
@@ -32,9 +32,13 @@ public class RMICallbackServiceImpl extends UnicastRemoteObject implements RMICa
         clients.remove(client);
     }
 
-    public void doCallbacks(List<RegisteredUser> updatedUsers) throws RemoteException {
+    public void notifyUsers(String username, UserStatus status) throws RemoteException {
+        doCallbacks(username, status);
+    }
+
+    private synchronized void doCallbacks(String username, UserStatus status) throws RemoteException {
         for (RMICallbackNotify client : clients) {
-            client.notifyUpdate(updatedUsers);
+            client.notifyUpdate(username, status);
         }
     }
 
