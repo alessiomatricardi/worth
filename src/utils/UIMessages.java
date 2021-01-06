@@ -50,4 +50,11 @@ public class UIMessages {
     // messaggio "registrazione riuscita con successo"
     public static final String REGISTRATION_SUCCESSFUL = "Registration successful";
 
+    // messaggio "card inesistente"
+    public static final String CARD_NOT_EXISTS = "This card not exists.";
+
+    // messaggio "operazione non permessa"
+    public static final String OPERATION_NOT_ALLOWED = "Sorry, but seems that you're trying" +
+            "to do an illegal operation.";
+
 }

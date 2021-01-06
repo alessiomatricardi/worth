@@ -33,4 +33,11 @@ public class Card implements Serializable {
     public void addMovement(Movement mov) {
         movements.add(mov);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || o.getClass() != this.getClass()) return false;
+        return this.name.equals(((Card)o).getName());
+    }
 }

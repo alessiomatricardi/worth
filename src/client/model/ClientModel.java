@@ -32,7 +32,7 @@ import java.util.Map;
  */
 public class ClientModel {
     private static final int ALLOCATION_SIZE = 1024*1024; // spazio di allocazione del buffer
-
+    private boolean isLogged; // l'utente è loggato?
     private SocketChannel socket;               // socket per instaurazione connessione
     private ObjectMapper mapper;                // mapper per serializzazione/deserializzazione
     private Map<String, UserStatus> userStatus; // lista degli stati degli utenti
@@ -50,9 +50,11 @@ public class ClientModel {
         this.mapper = new ObjectMapper();
         this.userStatus = Collections.synchronizedMap(new HashMap<>());
         this.callbackNotify = new RMICallbackNotifyImpl(this.userStatus);
+        this.isLogged = false;
     }
 
     public void closeConnection() {
+        if (!this.isLogged) return;
         try {
             logout();
             this.socket.close();
@@ -105,6 +107,9 @@ public class ClientModel {
         } catch (IOException | NotBoundException e) {
             e.printStackTrace();
         }
+
+        // sono loggato
+        this.isLogged = true;
     }
 
     public void logout() throws UserNotExistsException, CommunicationException {
@@ -127,6 +132,9 @@ public class ClientModel {
         } catch (RemoteException | NotBoundException e) {
             e.printStackTrace();
         }
+
+        // non sono più loggato
+        this.isLogged = false;
     }
 
     /**

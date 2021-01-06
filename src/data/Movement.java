@@ -1,5 +1,7 @@
 package worth.data;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -10,9 +12,12 @@ import java.time.ZoneId;
  * Rappresenta un movimento di una carta
  */
 public class Movement implements Serializable {
-    private final CardStatus from;
-    private final CardStatus to;
-    private final LocalDateTime when;
+    private CardStatus from;
+    private CardStatus to;
+    private LocalDateTime when;
+
+    @JsonCreator
+    private Movement() {}
 
     public Movement(CardStatus from, CardStatus to) {
         this.from = from;
