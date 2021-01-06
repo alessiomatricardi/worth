@@ -249,7 +249,12 @@ public class SelectionTask implements Runnable {
         }
     }
 
-    // todo interface
+    /**
+     * @param elements array di N parametri, i cui ultimi N-1 sono argomenti da dover decodificare
+     *
+     * @return una lista contenente gli N-1 parametri decodificati in Base64
+     *
+     * */
     private List<String> decodeMessageArguments(String[] elements) {
         List<String> args = new ArrayList<>();
         for (int i = 1; i < elements.length; i++) {

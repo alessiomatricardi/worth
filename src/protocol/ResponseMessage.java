@@ -6,11 +6,12 @@ import java.io.Serializable;
 
 /**
  * Created by alessiomatricardi on 04/01/21
+ *
+ * Identifica un messaggio di risposta che il server invia al client
  */
-// todo interface
 public class ResponseMessage implements Serializable {
-    private int statusCode;
-    private String responseBody;
+    private int statusCode; // status code risultante dalla operazione
+    private String responseBody; // corpo del messaggio (può essere null)
 
     public ResponseMessage(int statusCode, String responseBody) {
         this.statusCode = statusCode;

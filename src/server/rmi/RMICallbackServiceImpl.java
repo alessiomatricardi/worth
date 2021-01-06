@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Created by alessiomatricardi on 05/01/21
  *
- * todo altri throw??
+ * Implementazione del servizio di callback lato server
  */
 public class RMICallbackServiceImpl extends UnicastRemoteObject implements RMICallbackService {
     List<RMICallbackNotify> clients;
@@ -32,6 +32,12 @@ public class RMICallbackServiceImpl extends UnicastRemoteObject implements RMICa
         clients.remove(client);
     }
 
+    /**
+     * @param username nome utente da notificare ai client
+     * @param status status dell'utente da notificare
+     *
+     * @throws RemoteException se ci sono errori di connessione
+     * */
     public void notifyUsers(String username, UserStatus status) throws RemoteException {
         doCallbacks(username, status);
     }

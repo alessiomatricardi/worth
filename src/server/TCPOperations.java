@@ -14,9 +14,22 @@ import java.util.Map;
  */
 public interface TCPOperations { // todo interface
 
+    /**
+     * @param username username dell'utente di cui fare il login
+     * @param password password dell'utente
+     *
+     * @throws UserNotExistsException se l'utente non esiste
+     * @throws AlreadyLoggedException se l'utente è già loggato al servizio
+     * @throws WrongPasswordException se la password immessa è errata
+     * */
     void login(String username, String password)
             throws UserNotExistsException, AlreadyLoggedException, WrongPasswordException;
 
+    /**
+     * @param username username dell'utente di cui fare il logout
+     *
+     * @throws UserNotExistsException se l'utente non esiste
+     * */
     void logout(String username) throws UserNotExistsException;
     /*
     List<Project> listProjects();

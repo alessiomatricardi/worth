@@ -118,7 +118,12 @@ public class ClientModel {
         }
     }
 
-    // todo interface
+    /**
+     * @param command comando da eseguire
+     * @param args argomenti specifici del comando da eseguire
+     *
+     * @return comando completo con argomenti codificati in Base64
+     * */
     private String encodeMessageArguments(String command, String... args) {
         StringBuilder toReturn = new StringBuilder(command);
         for (String arg : args) {
@@ -128,7 +133,13 @@ public class ClientModel {
         return toReturn.toString();
     }
 
-    // todo interface
+    /**
+     * @param messageToSend messaggio da inviare al server
+     *
+     * @return messaggio di risposta dal server
+     *
+     * @throws CommunicationException se ci sono errori di comunicazione
+     * */
     private ResponseMessage sendTCPRequest(String messageToSend) throws CommunicationException {
         try {
             byte[] byteMessage = messageToSend.getBytes(StandardCharsets.UTF_8);
@@ -159,7 +170,9 @@ public class ClientModel {
         }
     }
 
-    // todo interface
+    /**
+     * Registra il client per il servizio di callback
+     * */
     private void registerForCallback() throws RemoteException, NotBoundException {
         // realizza connessione RMI per il servizio di callback
         Registry registry = LocateRegistry.getRegistry(CommunicationProtocol.REGISTRY_PORT);
@@ -169,7 +182,9 @@ public class ClientModel {
         callbackService.registerForCallback(this.callbackNotify);
     }
 
-    // todo interface
+    /**
+     * De-registra il client per il servizio di callback
+     * */
     private void unregisterForCallback() throws RemoteException, NotBoundException {
         // realizza connessione RMI per il servizio di callback
         Registry registry = LocateRegistry.getRegistry(CommunicationProtocol.REGISTRY_PORT);
