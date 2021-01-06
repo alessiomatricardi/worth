@@ -13,6 +13,8 @@ import java.rmi.RemoteException;
 
 /**
  * Created by alessiomatricardi on 03/01/21
+ *
+ * Controller che si occupa della gestione del pannello di accesso
  */
 public class AuthController {
     private final ClientModel model;

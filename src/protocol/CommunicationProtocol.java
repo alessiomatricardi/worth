@@ -6,27 +6,28 @@ package worth.protocol;
  * Insieme di tutti i dettagli di comunicazione client-server del servizio Worth
  */
 public abstract class CommunicationProtocol {
+    // IP del server per richieste TCP
+    public static final String SERVER_IP_ADDRESS = "localhost";
+
+    // Porta del server per richieste TCP
+    public static final int SERVER_PORT = 2500;
 
     // Porta del registry per recupero servizio di registrazione
     public static final int REGISTRY_PORT = 6789;
 
     // Nome del servizio di registrazione offerto da RMI
-    public static final String REGISTRATION_SERVICE_NAME = "RegistrationService";
+    public static final String REGISTRATION_SERVICE_NAME =
+            "rmi://" + SERVER_IP_ADDRESS +":" + REGISTRY_PORT + "/RegistrationService";
 
     // Nome del servizio di callback offerto da RMI
-    public static final String CALLBACK_SERVICE_NAME = "CallbackService";
+    public static final String CALLBACK_SERVICE_NAME =
+            "rmi://" + SERVER_IP_ADDRESS +":" + REGISTRY_PORT + "/CallbackService";
 
     // Lunghezza minima della password
     public static final int MIN_PASSWORD_LEN = 8;
 
     // REGEX username, solo a-z, A-Z, 0-9, . - _ consentiti
     public static final String USERNAME_REGEX = "^[a-zA-Z0-9._-]+$";
-
-    // IP del server per richieste TCP
-    public static final String SERVER_IP_ADDRESS = "localhost";
-
-    // Porta del server per richieste TCP
-    public static final int SERVER_PORT = 2500;
 
     // carattere separatore
     public static final String SEPARATOR = " ";

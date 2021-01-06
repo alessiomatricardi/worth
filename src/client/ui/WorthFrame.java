@@ -29,7 +29,6 @@ public class WorthFrame extends JFrame {
 
         this.getContentPane().add(cardHolder);
 
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // todo rivedi
         this.pack();
         this.setLocationRelativeTo(null);
         this.setResizable(false);

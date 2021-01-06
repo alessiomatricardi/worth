@@ -21,10 +21,10 @@ import java.util.*;
  * Created by alessiomatricardi on 03/01/21
  */
 public class SelectionTask implements Runnable {
-    private static final int ALLOCATION_SIZE = 1024*1024; // size (in byte) per allocazione di un ByteBuffer
-    private final TCPOperations data;
-    private final ObjectMapper mapper;
-    RMICallbackServiceImpl callbackService;
+    private static final int ALLOCATION_SIZE = 1024; // size (in byte) per allocazione di un ByteBuffer
+    private final TCPOperations data;       // dati dell'applicazione
+    private final ObjectMapper mapper;      // mapper utilizzato per serializzazione/deserializzazione
+    RMICallbackServiceImpl callbackService; // servizio di callback
 
     public SelectionTask(TCPOperations data, RMICallbackServiceImpl callbackService) {
         this.data = data;
@@ -68,13 +68,9 @@ public class SelectionTask implements Runnable {
 
                             // preparo per lettura da client
                             SelectionKey key2 = client.register(selector, SelectionKey.OP_READ);
-                        } catch (IOException e) { // todo rivedi
+                        } catch (IOException e) {
                             e.printStackTrace();
-                            try {
-                                server1.close();
-                            } catch (IOException ex) {
-                                ex.printStackTrace();
-                            }
+                            server1.close();
                             return;
                         }
                     } else if (key.isReadable()) {
@@ -88,50 +84,49 @@ public class SelectionTask implements Runnable {
                             attachment = new Attachment();
                         }
 
-                        ByteBuffer buffer = attachment.getBuffer();
-
-                        // null la prima volta, poi sarà sempre allocato
-                        if (buffer == null) {
-                            buffer = ByteBuffer.allocate(ALLOCATION_SIZE);
-                        }
+                        // alloco buffer
+                        ByteBuffer buffer = ByteBuffer.allocate(ALLOCATION_SIZE);
 
                         // read message from channel
+                        int byteReaded;
+                        int totalReaded = 0;
+                        StringBuilder messageReceived = new StringBuilder();
 
-                        int byteReaded = client.read(buffer);
+                        while(true) {
+                            byteReaded = client.read(buffer);
+                            if (byteReaded == -1) break;
+
+                            totalReaded += byteReaded;
+
+                            buffer.flip();
+
+                            messageReceived.append(StandardCharsets.UTF_8.decode(buffer).toString());
+
+                            buffer.clear();
+
+                            if (byteReaded == 0 && totalReaded > 0) break;
+                        }
 
                         // è stata chiusa la connessione dal client
                         if (byteReaded == -1) {
-                            // se utente loggato, devo fare logout
-                            String username = attachment.getUsername();
-                            if (username != null) {
-                                try {
-                                    data.logout(username);
-
-                                    // notifico altri utenti che username è offline
-                                    callbackService.notifyUsers(username, UserStatus.OFFLINE);
-                                } catch (UserNotExistsException e) {
-                                    e.printStackTrace();
-                                }
-                            }
                             key.cancel();
                             client.close();
                             continue;
                         }
 
-                        buffer.flip();
-                        String messageReceived = StandardCharsets.UTF_8.decode(buffer).toString();
-
                         // splitto messaggio attraverso separatore
-                        String[] tokens = messageReceived.split(CommunicationProtocol.SEPARATOR);
+                        String[] tokens = messageReceived.toString().split(CommunicationProtocol.SEPARATOR);
                         String command = tokens[0]; // la prima stringa è il comando
 
-                        List<String> arguments = this.decodeMessageArguments(tokens); // decodifico altre stringhe
+                        // decodifico gli argomenti
+                        List<String> arguments = this.decodeMessageArguments(tokens);
 
                         // preparo response code
                         int responseCode = CommunicationProtocol.UNKNOWN;
                         // preparo response body
                         String responseBody = null;
 
+                        // in base al comando, ci saranno diversi comportamenti
                         switch (command) {
                             case CommunicationProtocol.LOGIN_CMD: {
                                 // controllo numero di parametri
@@ -179,7 +174,7 @@ public class SelectionTask implements Runnable {
                                 break;
                             }
                             case CommunicationProtocol.CREATEPROJECT_CMD: {
-                                // todo1
+                                // todo altri casi
                                 break;
                             }
                             case CommunicationProtocol.ADD_CARD_CMD: {
@@ -209,12 +204,13 @@ public class SelectionTask implements Runnable {
                             responseCode = CommunicationProtocol.OP_SUCCESS;
                         }
 
+                        // preparo messaggio di risposta
                         ResponseMessage response = new ResponseMessage(
                                 responseCode,
                                 responseBody
                         );
 
-                        // preparo messaggio da inviare
+                        // lo serializzo e lo inserisco nel buffer
                         byte[] byteResponse = mapper.writeValueAsBytes(response);
                         buffer = ByteBuffer.wrap(byteResponse);
 
@@ -223,7 +219,8 @@ public class SelectionTask implements Runnable {
 
                         // preparo per scrittura su client
                         SelectionKey key2 = client.register(selector, SelectionKey.OP_WRITE, attachment);
-                    } else if (key.isWritable()) { // client aspetta scrittura su channel
+                    } else if (key.isWritable()) {
+                        // client aspetta scrittura su channel
                         SocketChannel client = (SocketChannel) key.channel();
 
                         Attachment attachment = (Attachment) key.attachment();

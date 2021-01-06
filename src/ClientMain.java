@@ -1,6 +1,7 @@
 package worth;
 
 import worth.client.controller.AuthController;
+import worth.client.controller.FrameController;
 import worth.client.controller.LoggedController;
 import worth.client.model.ClientModel;
 import worth.client.ui.AuthUI;
@@ -48,6 +49,7 @@ public class ClientMain {
 
         // crea frame
         WorthFrame frame = new WorthFrame(authUI, loggedUI);
+        FrameController frameController = new FrameController(model, frame);
     }
 
 }

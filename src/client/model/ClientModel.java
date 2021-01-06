@@ -27,6 +27,8 @@ import java.util.Map;
 
 /**
  * Created by alessiomatricardi on 03/01/21
+ *
+ * Model (logica) del client secondo il pattern MVC
  */
 public class ClientModel {
     private static final int ALLOCATION_SIZE = 1024*1024; // spazio di allocazione del buffer
@@ -48,6 +50,15 @@ public class ClientModel {
         this.mapper = new ObjectMapper();
         this.userStatus = Collections.synchronizedMap(new HashMap<>());
         this.callbackNotify = new RMICallbackNotifyImpl(this.userStatus);
+    }
+
+    public void closeConnection() {
+        try {
+            logout();
+            this.socket.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void register(String username, String password)

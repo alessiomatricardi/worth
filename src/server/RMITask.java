@@ -6,6 +6,7 @@ import worth.server.rmi.RMICallbackServiceImpl;
 import worth.server.rmi.RMIRegistrationService;
 import worth.server.rmi.RMIRegistrationServiceImpl;
 
+import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -31,16 +32,16 @@ public class RMITask implements Runnable {
             Registry registry = LocateRegistry.createRegistry(CommunicationProtocol.REGISTRY_PORT);
 
             // pubblico stub del callback nel registry
-            registry.rebind(CommunicationProtocol.CALLBACK_SERVICE_NAME, callbackService);
+            registry.bind(CommunicationProtocol.CALLBACK_SERVICE_NAME, callbackService);
             System.out.println("Callback service is now available");
 
             // creo oggetto
             RMIRegistrationService registrationService = new RMIRegistrationServiceImpl(registration, callbackService);
 
             // pubblico stub della registrazione nel registry
-            registry.rebind(CommunicationProtocol.REGISTRATION_SERVICE_NAME, registrationService);
+            registry.bind(CommunicationProtocol.REGISTRATION_SERVICE_NAME, registrationService);
             System.out.println("Registration service is now available");
-        } catch (RemoteException e) {
+        } catch (RemoteException | AlreadyBoundException e) {
             e.printStackTrace();
         }
     }
