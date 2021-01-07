@@ -25,7 +25,7 @@ public class Project implements Serializable {
      */
     @JsonIgnore
     private String chatAddress;
-    private Map<CardStatus, List<String>> statuslists; // 4 liste
+    private Map<CardStatus, List<String>> statusLists; // 4 liste
     /**
      * le card del progetto vengono serializzate in un file per ognuna
      */
@@ -35,14 +35,15 @@ public class Project implements Serializable {
     @JsonCreator
     public Project() {}
 
-    public Project(String projectName) throws NoSuchAddressException {
+    public Project(String projectName, String creator) throws NoSuchAddressException {
         this.name = projectName;
         this.members = new ArrayList<>();
+        this.members.add(creator);
         this.chatAddress = MulticastAddressManager.getAddress();
-        this.statuslists = new HashMap<>();
+        this.statusLists = new HashMap<>();
         CardStatus[] values = CardStatus.values();
         for (CardStatus status : values) {
-            this.statuslists.put(status, new ArrayList<>());
+            this.statusLists.put(status, new ArrayList<>());
         }
         this.cards = new ArrayList<>();
     }
@@ -83,6 +84,10 @@ public class Project implements Serializable {
         return this.chatAddress;
     }
 
+    public Map<CardStatus, List<String>> getStatusLists() {
+        return this.statusLists;
+    }
+
     public Card getCard(String cardName) throws CardNotExistsException {
         Card temp = new Card(cardName, "");
         int index = this.cards.indexOf(temp);
@@ -91,6 +96,7 @@ public class Project implements Serializable {
         return this.cards.get(index);
     }
 
+    @JsonIgnore
     public List<Card> getAllCards() {
         return this.cards;
     }
@@ -98,7 +104,7 @@ public class Project implements Serializable {
     public List<Card> getCardList(CardStatus status) {
         List<Card> toReturn = new ArrayList<>();
         for (Card card : this.cards) {
-            if (statuslists.get(status).contains(card.getName())) {
+            if (statusLists.get(status).contains(card.getName())) {
                 toReturn.add(card);
             }
         }
@@ -116,8 +122,8 @@ public class Project implements Serializable {
         if (!this.cards.contains(temp))
             throw new CardNotExistsException();
 
-        List<String> fromList = this.statuslists.get(from);
-        List<String> toList = this.statuslists.get(to);
+        List<String> fromList = this.statusLists.get(from);
+        List<String> toList = this.statusLists.get(to);
         if (!fromList.contains(cardName))
             throw new OperationNotAllowedException();
 
@@ -133,7 +139,7 @@ public class Project implements Serializable {
         if (this.cards.contains(card))
             throw new CardAlreadyExistsException();
         this.cards.add(card);
-        this.statuslists.get(CardStatus.TODO).add(card.getName());
+        this.statusLists.get(CardStatus.TODO).add(card.getName());
     }
 
     public void addMember(String user) throws UserAlreadyPresentException {
@@ -143,11 +149,12 @@ public class Project implements Serializable {
     }
 
     // posso eliminare il progetto?
+    @JsonIgnore
     public boolean isCloseable() {
         CardStatus[] values = CardStatus.values();
         for (CardStatus status : values) {
             if (status != CardStatus.DONE)
-                if (!this.statuslists.get(status).isEmpty())
+                if (!this.statusLists.get(status).isEmpty())
                     return false;
         }
         return true;

@@ -14,7 +14,7 @@ import java.util.List;
  * Genera indirizzi multicast a partire da 239.0.0.0 fino a 239.255.255.255
  */
 public abstract class MulticastAddressManager {
-    private static int a1 = 239;
+    private static final int a1 = 239;
     private static int a2 = 0;
     private static int a3 = 0;
     private static int a4 = 0;
@@ -23,7 +23,7 @@ public abstract class MulticastAddressManager {
     private static final int MAX_A3 = 256;
     private static final int MAX_A4 = 256;
     private static final String MAX_ADDRESS = "239.255.255.255";
-    private static List<String> freeAddresses = new ArrayList<>();
+    private static final List<String> freeAddresses = new ArrayList<>();
 
     public synchronized static String getAddress() throws NoSuchAddressException {
         if (!freeAddresses.isEmpty()) {

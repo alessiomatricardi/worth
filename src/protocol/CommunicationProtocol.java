@@ -48,6 +48,15 @@ public abstract class CommunicationProtocol {
     // l'utente non esiste
     public static final int USER_NOT_EXISTS = 101;
 
+    // il progetto non esiste
+    public static final int PROJECT_NOT_EXISTS = 102;
+
+    // la card non esiste
+    public static final int CARD_NOT_EXISTS = 103;
+
+    // utente non autorizzato
+    public static final int UNAUTHORIZED = 104;
+
 
     public static final String LOGIN_CMD = "login";
     public static final int LOGIN_WRONGPWD = 1;
@@ -56,15 +65,21 @@ public abstract class CommunicationProtocol {
     public static final String LOGOUT_CMD = "logout";
 
     public static final String CREATEPROJECT_CMD = "create_project";
+    public static final int CREATEPROJECT_ALREADYEXISTS = 1;
+    public static final int CREATEPROJECT_NOMOREADDRESSES = 2;
 
     public static final String ADD_CARD_CMD = "add_card";
+    public static final int ADD_CARD_ALREADYEXISTS = 1;
 
     public static final String MOVE_CARD_CMD = "move_card";
+    public static final int MOVE_CARD_NOT_ALLOWED = 1;
 
     public static final String ADD_MEMBER_CMD = "add_member";
+    public static final int ADD_MEMBER_ALREADYPRESENT = 1;
 
     public static final String SHOW_CARDS_CMD = "show_cards";
 
     public static final String CANCELPROJECT_CMD = "cancel_project";
+    public static final int CANCELPROJECT_NOTCLOSEABLE = 1;
 
 }

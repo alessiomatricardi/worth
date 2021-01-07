@@ -145,6 +145,24 @@ public class ClientModel {
         this.isLogged = false;
     }
 
+    public void createProject(String projectName)
+            throws ProjectAlreadyExistsException, NoSuchAddressException, CommunicationException {
+        // prepara messaggio da inviare
+        String messageToSend = this.encodeMessageArguments(
+                CommunicationProtocol.CREATEPROJECT_CMD,
+                projectName
+        );
+
+        ResponseMessage response = null;
+        response = this.sendTCPRequest(messageToSend);
+
+        switch (response.getStatusCode()) { // casi di errori
+            case CommunicationProtocol.CREATEPROJECT_ALREADYEXISTS -> throw new ProjectAlreadyExistsException();
+            case CommunicationProtocol.CREATEPROJECT_NOMOREADDRESSES -> throw new NoSuchAddressException();
+            case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
+        }
+    }
+
     /**
      * @param command comando da eseguire
      * @param args argomenti specifici del comando da eseguire

@@ -1,15 +1,13 @@
 package worth.server;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import worth.data.CardStatus;
 import worth.data.UserStatus;
-import worth.exceptions.AlreadyLoggedException;
+import worth.exceptions.*;
 import worth.protocol.CommunicationProtocol;
 import worth.protocol.ResponseMessage;
-import worth.exceptions.UserNotExistsException;
-import worth.exceptions.WrongPasswordException;
 import worth.server.rmi.RMICallbackServiceImpl;
 
 import java.io.IOException;
@@ -46,7 +44,6 @@ public class SelectionTask implements Runnable {
     public void run() {
         ServerSocketChannel serverChannel;
         Selector selector = null;
-        ObjectMapper mapper = new ObjectMapper();
 
         try {
             serverChannel = ServerSocketChannel.open();
@@ -138,7 +135,7 @@ public class SelectionTask implements Runnable {
                         String responseBody = null;
 
                         // in base al comando, ci saranno diversi comportamenti
-                        switch (command) {
+                        switch (command) { // todo manca qualcosa
                             case CommunicationProtocol.LOGIN_CMD: {
                                 // controllo numero di parametri
                                 if (arguments.size() != 2) {
@@ -185,27 +182,143 @@ public class SelectionTask implements Runnable {
                                 break;
                             }
                             case CommunicationProtocol.CREATEPROJECT_CMD: {
-                                // todo altri casi
+                                // controllo numero di parametri
+                                if (arguments.size() != 1) {
+                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
+                                    break;
+                                }
+
+                                // recupero l'utente che ha fatto la richiesta
+                                String username = attachment.getUsername();
+
+                                String projectName = arguments.get(0);
+                                try {
+                                    data.createProject(projectName, username);
+                                } catch (ProjectAlreadyExistsException e) {
+                                    responseCode = CommunicationProtocol.CREATEPROJECT_ALREADYEXISTS;
+                                } catch (NoSuchAddressException e) {
+                                    responseCode = CommunicationProtocol.CREATEPROJECT_NOMOREADDRESSES;
+                                }
                                 break;
                             }
                             case CommunicationProtocol.ADD_CARD_CMD: {
-                                // todo1
+                                // controllo numero di parametri
+                                if (arguments.size() != 1) {
+                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
+                                    break;
+                                }
+                                // il nome utente viene prelevato direttamente dal server
+                                String username = attachment.getUsername();
+
+                                String projectName = arguments.get(0);
+                                String cardName = arguments.get(1);
+                                String description = arguments.get(2);
+                                try {
+                                    data.addCard(projectName, cardName, description, username);
+                                } catch (ProjectNotExistsException e) {
+                                    responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
+                                } catch (UnauthorizedUserException e) {
+                                    responseCode = CommunicationProtocol.UNAUTHORIZED;
+                                } catch (CardAlreadyExistsException e) {
+                                    responseCode = CommunicationProtocol.ADD_CARD_ALREADYEXISTS;
+                                }
                                 break;
                             }
                             case CommunicationProtocol.MOVE_CARD_CMD: {
-                                // todo1
+                                // controllo numero di parametri
+                                if (arguments.size() != 4) {
+                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
+                                    break;
+                                }
+                                // il nome utente viene prelevato direttamente dal server
+                                String username = attachment.getUsername();
+
+                                String projectName = arguments.get(0);
+                                String cardName = arguments.get(1);
+                                CardStatus from = this.mapper.readValue(
+                                        arguments.get(2),
+                                        new TypeReference<CardStatus>() {}
+                                );
+                                CardStatus to = this.mapper.readValue(
+                                        arguments.get(3),
+                                        new TypeReference<CardStatus>() {}
+                                );;
+
+                                try {
+                                    data.moveCard(projectName, cardName, from, to, username);
+                                } catch (ProjectNotExistsException e) {
+                                    responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
+                                } catch (UnauthorizedUserException e) {
+                                    responseCode = CommunicationProtocol.UNAUTHORIZED;
+                                } catch (CardNotExistsException e) {
+                                    responseCode = CommunicationProtocol.CARD_NOT_EXISTS;
+                                } catch (OperationNotAllowedException e) {
+                                    responseCode = CommunicationProtocol.MOVE_CARD_NOT_ALLOWED;
+                                }
                                 break;
                             }
                             case CommunicationProtocol.ADD_MEMBER_CMD: {
-                                // todo1
+                                // controllo numero di parametri
+                                if (arguments.size() != 2) {
+                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
+                                    break;
+                                }
+                                // il nome utente viene prelevato direttamente dal server
+                                String username = attachment.getUsername();
+
+                                String projectName = arguments.get(0);
+                                String userToAdd = arguments.get(1);
+                                try {
+                                    data.addMember(projectName, userToAdd, username);
+                                } catch (ProjectNotExistsException e) {
+                                    responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
+                                } catch (UnauthorizedUserException e) {
+                                    responseCode = CommunicationProtocol.UNAUTHORIZED;
+                                } catch (UserAlreadyPresentException e) {
+                                    responseCode = CommunicationProtocol.ADD_MEMBER_ALREADYPRESENT;
+                                } catch (UserNotExistsException e) {
+                                    responseCode = CommunicationProtocol.USER_NOT_EXISTS;
+                                }
                                 break;
                             }
                             case CommunicationProtocol.SHOW_CARDS_CMD: {
-                                // todo1
+                                // controllo numero di parametri
+                                if (arguments.size() != 1) {
+                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
+                                    break;
+                                }
+                                // il nome utente viene prelevato direttamente dal server
+                                String username = attachment.getUsername();
+
+                                String projectName = arguments.get(0);
+                                try {
+                                    data.showCards(projectName, username);
+                                } catch (ProjectNotExistsException e) {
+                                    responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
+                                } catch (UnauthorizedUserException e) {
+                                    responseCode = CommunicationProtocol.UNAUTHORIZED;
+                                }
                                 break;
                             }
                             case CommunicationProtocol.CANCELPROJECT_CMD: {
-                                // todo1
+                                // controllo numero di parametri
+                                if (arguments.size() != 1) {
+                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
+                                    break;
+                                }
+                                // il nome utente viene prelevato direttamente dal server
+                                String username = attachment.getUsername();
+
+                                String projectName = arguments.get(0);
+                                try {
+                                    data.cancelProject(projectName, username);
+                                } catch (ProjectNotExistsException e) {
+                                    responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
+                                } catch (UnauthorizedUserException e) {
+                                    responseCode = CommunicationProtocol.UNAUTHORIZED;
+                                } catch (ProjectNotCloseableException e) {
+                                    responseCode = CommunicationProtocol.CANCELPROJECT_NOTCLOSEABLE;
+                                }
                                 break;
                             }
                         }
@@ -222,7 +335,7 @@ public class SelectionTask implements Runnable {
                         );
 
                         // lo serializzo e lo inserisco nel buffer
-                        byte[] byteResponse = mapper.writeValueAsBytes(response);
+                        byte[] byteResponse = this.mapper.writeValueAsBytes(response);
                         buffer = ByteBuffer.wrap(byteResponse);
 
                         // salvo il buffer negli attachment

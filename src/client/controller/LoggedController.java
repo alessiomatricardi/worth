@@ -4,6 +4,8 @@ import worth.client.model.ClientModel;
 import worth.client.ui.LoggedUI;
 import worth.client.ui.WorthFrame;
 import worth.exceptions.CommunicationException;
+import worth.exceptions.NoSuchAddressException;
+import worth.exceptions.ProjectAlreadyExistsException;
 import worth.exceptions.UserNotExistsException;
 import worth.utils.UIMessages;
 import worth.utils.Utils;
@@ -36,7 +38,16 @@ public class LoggedController {
     }
 
     private void createProject() {
-
+        // prendi dati da casella
+        try {
+            this.model.createProject("prova444"); // prova todo togli
+        } catch (CommunicationException e) {
+            Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
+        } catch (NoSuchAddressException e) {
+            Utils.showErrorMessageDialog(UIMessages.NO_SUCH_ADDRESS);
+        } catch (ProjectAlreadyExistsException e) {
+            Utils.showErrorMessageDialog(UIMessages.PROJECT_ALREADY_EXISTS);
+        }
     }
 
     private void logout() {

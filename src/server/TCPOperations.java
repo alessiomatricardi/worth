@@ -12,7 +12,7 @@ import java.util.Map;
  *
  * Interfaccia che dichiara tutte le operazioni TCP che il server dovrà assolvere
  */
-public interface TCPOperations { // todo interface
+public interface TCPOperations {
 
     /**
      * Effettua il login
@@ -48,16 +48,17 @@ public interface TCPOperations { // todo interface
     List<Project> listProjects(String username) throws UserNotExistsException;
 
     /**
-     * Crea un nuovo progetto con nome projectName
+     * Crea un nuovo progetto con nome projectName. L'utente che lo crea, ne diventa membro
      *
      * @param projectName nome del progetto
+     * @param whoRequest l'utente che ha richiesto l'operazione
      *
      * @throws ProjectAlreadyExistsException se un progetto con quel nome esiste già
      * @throws NoSuchAddressException se non ci sono più indirizzi multicast disponibili
      * @throws IOException se ci sono errori nel salvataggio del progetto
      *
      */
-    void createProject(String projectName) throws ProjectAlreadyExistsException, NoSuchAddressException, IOException;
+    void createProject(String projectName, String whoRequest) throws ProjectAlreadyExistsException, NoSuchAddressException, IOException;
 
     /**
      * Aggiunge un membro al progetto
@@ -133,6 +134,7 @@ public interface TCPOperations { // todo interface
      * @throws ProjectNotExistsException se il progetto non esiste
      * @throws UnauthorizedUserException se non si hanno le autorizzazioni necessarie
      * @throws CardAlreadyExistsException se la card esiste già nel progetto
+     * @throws IOException se ci sono errori nel salvataggio
      *
      */
     void addCard(String projectName, String cardName, String description, String whoRequest)
@@ -147,6 +149,7 @@ public interface TCPOperations { // todo interface
      * @param to stato di destinazione
      * @param whoRequest utente che richiede l'operazione
      *
+     * @throws IOException se ci sono errori nel salvataggio
      * @throws ProjectNotExistsException se il progetto non esiste
      * @throws UnauthorizedUserException se non si hanno le autorizzazioni necessarie
      * @throws CardNotExistsException se la card non esiste

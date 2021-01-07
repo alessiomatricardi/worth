@@ -111,7 +111,7 @@ public class PersistentData implements Registration, TCPOperations {
                 File[] projectFileList = projectDir.listFiles(fileFilter);
                 if (projectFileList != null) {
                     if (projectFileList.length == 0) {
-                        System.out.format("Project %s doesn't have config file (%s)",
+                        System.out.format("Project %s doesn't have config file (%s)\n",
                                 projectDir.getName(), PROJECT_CONFIG_FILENAME);
                     }
                     // lista delle card del progetto
@@ -211,11 +211,11 @@ public class PersistentData implements Registration, TCPOperations {
     }
 
     @Override
-    public void createProject(String projectName)
+    public void createProject(String projectName, String whoRequest)
             throws ProjectAlreadyExistsException, NoSuchAddressException, IOException {
         if (this.projects.containsKey(projectName))
             throw new ProjectAlreadyExistsException();
-        Project newProject = new Project(projectName);
+        Project newProject = new Project(projectName, whoRequest);
         this.storeProject(newProject);
         this.projects.put(projectName, newProject);
     }
@@ -322,7 +322,9 @@ public class PersistentData implements Registration, TCPOperations {
             throw new UnauthorizedUserException();
         if (!project.isCloseable())
             throw new ProjectNotCloseableException();
+        MulticastAddressManager.freeAddress(project.getChatAddress());
         this.projects.remove(projectName);
+        // todo rimuovi files
     }
 
     @Override
@@ -373,7 +375,12 @@ public class PersistentData implements Registration, TCPOperations {
      * @throws IOException se ci sono errori nel salvataggio
      */
     private void storeProject(Project project) throws IOException {
-        String fileName = PROJECTS_FOLDER_PATH + project.getName() + "/" + PROJECT_CONFIG_FILENAME;
+        String projectFolder = PROJECTS_FOLDER_PATH + project.getName() + "/";
+        String fileName = projectFolder + PROJECT_CONFIG_FILENAME;
+        File projectFolderFile = new File(projectFolder);
+        if (!projectFolderFile.exists()) {
+            projectFolderFile.mkdir();
+        }
         FileChannel outChannel = FileChannel.open(Paths.get(fileName), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         byte[] byteProject = mapper.writeValueAsBytes(project);
 
