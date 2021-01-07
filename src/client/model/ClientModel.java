@@ -2,6 +2,7 @@ package worth.client.model;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import worth.client.model.rmi.RMICallbackNotify;
 import worth.client.model.rmi.RMICallbackNotifyImpl;
 import worth.data.UserStatus;
@@ -20,6 +21,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,7 +49,13 @@ public class ClientModel {
                 CommunicationProtocol.SERVER_PORT
         );
         this.socket.connect(address); // bloccante per il client
+
         this.mapper = new ObjectMapper();
+        // abilita indentazione
+        this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        // formattazione data
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+
         this.userStatus = Collections.synchronizedMap(new HashMap<>());
         this.callbackNotify = new RMICallbackNotifyImpl(this.userStatus);
         this.isLogged = false;

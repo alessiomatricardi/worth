@@ -57,4 +57,12 @@ public class UIMessages {
     public static final String OPERATION_NOT_ALLOWED = "Sorry, but seems that you're trying" +
             "to do an illegal operation.";
 
+    // messaggio "card già presente nel progetto"
+    public static final String CARD_ALREADY_EXISTS = "This card can't be added because " +
+            "it already exists in the project.";
+
+    // messaggio "indirizzi finiti"
+    public static final String NO_SUCH_ADDRESS = "Sorry, but the project can't be created because" +
+            " we passed the maximum number of chat addresses.";
+
 }

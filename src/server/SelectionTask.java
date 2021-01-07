@@ -1,6 +1,9 @@
 package worth.server;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import worth.data.UserStatus;
 import worth.exceptions.AlreadyLoggedException;
 import worth.protocol.CommunicationProtocol;
@@ -15,6 +18,7 @@ import java.net.ServerSocket;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -23,13 +27,20 @@ import java.util.*;
 public class SelectionTask implements Runnable {
     private static final int ALLOCATION_SIZE = 1024; // size (in byte) per allocazione di un ByteBuffer
     private final TCPOperations data;       // dati dell'applicazione
-    private final ObjectMapper mapper;      // mapper utilizzato per serializzazione/deserializzazione
+    private final ObjectMapper mapper;      // mapper utilizzato per serializzazione/deserializzazione Jackson
     RMICallbackServiceImpl callbackService; // servizio di callback
 
     public SelectionTask(TCPOperations data, RMICallbackServiceImpl callbackService) {
         this.data = data;
         this.callbackService = callbackService;
+
         this.mapper = new ObjectMapper();
+        // abilita indentazione
+        this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        // formattazione data
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+        this.mapper.setDateFormat(dateFormat);
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     public void run() {

@@ -1,10 +1,11 @@
 package worth.utils;
 
+import worth.exceptions.NoSuchAddressException;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 /**
  * Created by alessiomatricardi on 06/01/21
@@ -12,7 +13,7 @@ import java.util.NoSuchElementException;
  * Gestore di indirizzi multicast
  * Genera indirizzi multicast a partire da 239.0.0.0 fino a 239.255.255.255
  */
-public class MulticastAddressHandler {
+public abstract class MulticastAddressManager {
     private static int a1 = 239;
     private static int a2 = 0;
     private static int a3 = 0;
@@ -24,13 +25,13 @@ public class MulticastAddressHandler {
     private static final String MAX_ADDRESS = "239.255.255.255";
     private static List<String> freeAddresses = new ArrayList<>();
 
-    public synchronized static String getAddress() throws NoSuchElementException {
+    public synchronized static String getAddress() throws NoSuchAddressException {
         if (!freeAddresses.isEmpty()) {
             return freeAddresses.remove(0);
         }
         String addressToSend = a1 + "." + a2 + "." + a3 + "." + a4;
         if (addressToSend.equals(MAX_ADDRESS)) {
-            throw new NoSuchElementException();
+            throw new NoSuchAddressException();
         }
         a4++;
         a4 %= MAX_A4;

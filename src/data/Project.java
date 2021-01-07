@@ -1,11 +1,18 @@
 package worth.data;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import worth.exceptions.AlreadyExistsCardException;
 import worth.exceptions.CardNotExistsException;
+import worth.exceptions.NoSuchAddressException;
 import worth.exceptions.OperationNotAllowedException;
+import worth.utils.MulticastAddressManager;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by alessiomatricardi on 02/01/21
@@ -15,57 +22,46 @@ import java.util.List;
 public class Project implements Serializable {
     private String name;
     private List<String> members;
+    /**
+     * l'indirizzo della chat multicast non viene mai serializzato/deserializzato
+     * quando il progetto viene recuperato dal server, gli viene assegnato un nuovo indirizzo
+     */
+    @JsonIgnore
     private String chatAddress;
-    private List<Card> todoList;
-    private List<Card> inProgressList;
-    private List<Card> toBeRevisedList;
-    private List<Card> doneList;
+    private Map<CardStatus, List<String>> statuslists; // 4 liste
+    /**
+     * le card del progetto vengono serializzate in un file per ognuna
+     */
+    @JsonIgnore
+    private List<Card> cards;
 
-    public Project(String projectName) {
+    @JsonCreator
+    public Project() {}
+
+    public Project(String projectName) throws NoSuchAddressException {
         this.name = projectName;
         this.members = new ArrayList<>();
-        this.chatAddress = ""; // todo
-        this.todoList = new ArrayList<>();
-        this.inProgressList = new ArrayList<>();
-        this.toBeRevisedList = new ArrayList<>();
-        this.doneList = new ArrayList<>();
+        this.chatAddress = MulticastAddressManager.getAddress();
+        this.statuslists = new HashMap<>();
+        CardStatus[] values = CardStatus.values();
+        for (CardStatus status : values) {
+            this.statuslists.put(status, new ArrayList<>());
+        }
+        this.cards = new ArrayList<>();
     }
 
-    public void moveCard (String cardName, CardStatus from, CardStatus to)
-            throws OperationNotAllowedException, CardNotExistsException {
-        // todo serializza nuovo movimento e progetto
-        if (!this.isAllowed(from, to))
-            throw new OperationNotAllowedException();
-        Card temp = new Card(cardName, "nothing important");
-        int index;
-        Card card = null;
-        if (from == CardStatus.TODO) {
-            if ((index = todoList.indexOf(temp)) == -1)
-                throw new CardNotExistsException();
-            card = todoList.remove(index);
-            inProgressList.add(card); // solo inprogress
-            card.addMovement(new Movement(from, to));
-        } else if (from == CardStatus.INPROGRESS) {
-            if ((index = inProgressList.indexOf(temp)) == -1)
-                throw new CardNotExistsException();
-            card = inProgressList.remove(index);
-            if (to == CardStatus.TOBEREVISED) {
-                toBeRevisedList.add(card);
-            } else {
-                doneList.add(card);
-            }
-            card.addMovement(new Movement(from, to));
-        } else if (from == CardStatus.TOBEREVISED) {
-            if ((index = toBeRevisedList.indexOf(temp)) == -1)
-                throw new CardNotExistsException();
-            card = toBeRevisedList.remove(index);
-            if (to == CardStatus.INPROGRESS) {
-                inProgressList.add(card);
-            } else {
-                doneList.add(card);
-            }
-            card.addMovement(new Movement(from, to));
-        }
+    public void initChatAddress(String address) {
+        if (this.chatAddress != null)
+            // throw todo
+            return;
+        this.chatAddress = address;
+    }
+
+    public void initCardList(List<Card> cards) {
+        if (this.cards != null)
+            // throw todo
+            return;
+        this.cards = cards;
     }
 
     public String getName() {
@@ -80,8 +76,66 @@ public class Project implements Serializable {
         return this.chatAddress;
     }
 
+    public List<Card> getAllCards() {
+        return this.cards;
+    }
+
+    public List<Card> getStatusList(CardStatus status) {
+        List<Card> toReturn = new ArrayList<>();
+        for (Card card : this.cards) {
+            if (statuslists.get(status).contains(card.getName())) {
+                toReturn.add(card);
+            }
+        }
+        return toReturn;
+    }
+
+    public void moveCard (String cardName, CardStatus from, CardStatus to)
+            throws OperationNotAllowedException, CardNotExistsException {
+        // todo serializza nuovo movimento e progetto
+        if (!this.moveIsAllowed(from, to))
+            throw new OperationNotAllowedException();
+
+        List<String> fromList = this.statuslists.get(from);
+        List<String> toList = this.statuslists.get(to);
+        if (!fromList.contains(cardName))
+            throw new CardNotExistsException();
+
+        fromList.remove(cardName);
+        toList.add(cardName);
+
+        // aggiungo movimento alla card
+        Card thisCard = this.cards.get(this.cards.indexOf(new Card(cardName, "")));
+        thisCard.addMovement(new Movement(from, to));
+    }
+
+    public void addCard(Card card) throws AlreadyExistsCardException {
+        if (this.cards.contains(card))
+            throw new AlreadyExistsCardException();
+        this.cards.add(card);
+        this.statuslists.get(CardStatus.TODO).add(card.getName());
+    }
+
+    public void addMember(String user) {
+        if (this.members.contains(user))
+            // todo throw
+            return;
+        this.members.add(user);
+    }
+
+    // posso eliminare il progetto?
+    public boolean canBeClosed() {
+        CardStatus[] values = CardStatus.values();
+        for (CardStatus status : values) {
+            if (status != CardStatus.DONE)
+                if (!this.statuslists.get(status).isEmpty())
+                    return false;
+        }
+        return true;
+    }
+
     // posso fare tale spostamento?
-    private boolean isAllowed(CardStatus from, CardStatus to) {
+    private boolean moveIsAllowed(CardStatus from, CardStatus to) {
         if (from == to) return false;
         // da _todo posso andare solo in inprogress
         if (from == CardStatus.TODO && (to != CardStatus.INPROGRESS))
