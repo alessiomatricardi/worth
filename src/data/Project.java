@@ -53,9 +53,9 @@ public class Project implements Serializable {
      * non può essere chiamato da nessun altro
      *
      */
-    public void initChatAddress(String address) throws AlreadyInitializedException {
+    public void initChatAddress(String address) throws AlreadyInitialedException {
         if (this.chatAddress != null)
-            throw new AlreadyInitializedException();
+            throw new AlreadyInitialedException();
         this.chatAddress = address;
     }
 
@@ -65,9 +65,9 @@ public class Project implements Serializable {
      * non può essere chiamato da nessun altro
      *
      */
-    public void initCardList(List<Card> cards) throws AlreadyInitializedException {
+    public void initCardList(List<Card> cards) throws AlreadyInitialedException {
         if (this.cards != null)
-            throw new AlreadyInitializedException();
+            throw new AlreadyInitialedException();
         this.cards = cards;
     }
 
@@ -83,11 +83,19 @@ public class Project implements Serializable {
         return this.chatAddress;
     }
 
+    public Card getCard(String cardName) throws CardNotExistsException {
+        Card temp = new Card(cardName, "");
+        int index = this.cards.indexOf(temp);
+        if (index == -1)
+            throw new CardNotExistsException();
+        return this.cards.get(index);
+    }
+
     public List<Card> getAllCards() {
         return this.cards;
     }
 
-    public List<Card> getStatusList(CardStatus status) {
+    public List<Card> getCardList(CardStatus status) {
         List<Card> toReturn = new ArrayList<>();
         for (Card card : this.cards) {
             if (statuslists.get(status).contains(card.getName())) {
@@ -99,39 +107,43 @@ public class Project implements Serializable {
 
     public void moveCard (String cardName, CardStatus from, CardStatus to)
             throws OperationNotAllowedException, CardNotExistsException {
-        // todo serializza nuovo movimento e progetto
+        // verifico che la mossa sia consentita
         if (!this.moveIsAllowed(from, to))
             throw new OperationNotAllowedException();
+
+        // verifico che la carta esista
+        Card temp = new Card(cardName, "");
+        if (!this.cards.contains(temp))
+            throw new CardNotExistsException();
 
         List<String> fromList = this.statuslists.get(from);
         List<String> toList = this.statuslists.get(to);
         if (!fromList.contains(cardName))
-            throw new CardNotExistsException();
+            throw new OperationNotAllowedException();
 
         fromList.remove(cardName);
         toList.add(cardName);
 
         // aggiungo movimento alla card
-        Card thisCard = this.cards.get(this.cards.indexOf(new Card(cardName, "")));
+        Card thisCard = this.cards.get(this.cards.indexOf(temp));
         thisCard.addMovement(new Movement(from, to));
     }
 
-    public void addCard(Card card) throws AlreadyExistsCardException {
+    public void addCard(Card card) throws CardAlreadyExistsException {
         if (this.cards.contains(card))
-            throw new AlreadyExistsCardException();
+            throw new CardAlreadyExistsException();
         this.cards.add(card);
         this.statuslists.get(CardStatus.TODO).add(card.getName());
     }
 
-    public void addMember(String user) {
+    public void addMember(String user) throws UserAlreadyPresentException {
         if (this.members.contains(user))
-            // todo throw
-            return;
+            throw new UserAlreadyPresentException();
         this.members.add(user);
     }
 
     // posso eliminare il progetto?
-    public boolean canBeClosed() {
+    public boolean isCloseable() {
         CardStatus[] values = CardStatus.values();
         for (CardStatus status : values) {
             if (status != CardStatus.DONE)

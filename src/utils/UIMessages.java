@@ -55,7 +55,7 @@ public class UIMessages {
 
     // messaggio "operazione non permessa"
     public static final String OPERATION_NOT_ALLOWED = "Sorry, but seems that you're trying" +
-            "to do an illegal operation.";
+            " to do an illegal operation.";
 
     // messaggio "card già presente nel progetto"
     public static final String CARD_ALREADY_EXISTS = "This card can't be added because " +
@@ -64,5 +64,24 @@ public class UIMessages {
     // messaggio "indirizzi finiti"
     public static final String NO_SUCH_ADDRESS = "Sorry, but the project can't be created because" +
             " we passed the maximum number of chat addresses.";
+
+    // messaggio "progetto già esistente"
+    public static final String PROJECT_ALREADY_EXISTS = "The project can't be created because" +
+            " already exists another project with this name.";
+
+    // messaggio "progetto non chiudibile"
+    public static final String PROJECT_NOT_CLOSEABLE = "The project can't be closed because" +
+            " there are some tasks to do yet.";
+
+    // messaggio "progetto inesistente"
+    public static final String PROJECT_NOT_EXISTS = "I don't know how, but you tried to access" +
+            " to a not existing project. Maybe it has been canceled while" +
+            " you were trying to modify it.";
+
+    // messaggio "utente non autorizzato"
+    public static final String UNAUTHORIZED_USER = "It seems that you are not authorized to access this data.";
+
+    // messaggio "utente già presente nel progetto"
+    public static final String USER_ALREADY_PRESENT = "The user is already in this project.";
 
 }

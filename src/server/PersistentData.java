@@ -3,10 +3,7 @@ package worth.server;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import worth.data.Card;
-import worth.data.Project;
-import worth.data.User;
-import worth.data.UserStatus;
+import worth.data.*;
 import worth.exceptions.*;
 import worth.utils.MulticastAddressManager;
 import worth.utils.PasswordManager;
@@ -38,10 +35,10 @@ public class PersistentData implements Registration, TCPOperations {
     private final static String PROJECT_CONFIG_FILENAME = "info.json";
     private static final int BUFFER_SIZE = 1024*1024; // spazio di allocazione del buffer
 
-    private Map<String, User> users;
-    private Map<String, Project> projects;
-    private Map<String, UserStatus> userStatus;
-    private ObjectMapper mapper;
+    private final Map<String, User> users;
+    private final Map<String, Project> projects;
+    private final Map<String, UserStatus> userStatus;
+    private final ObjectMapper mapper;
 
     public PersistentData() throws IOException {
         this.users = new ConcurrentHashMap<>();
@@ -85,12 +82,8 @@ public class PersistentData implements Registration, TCPOperations {
 
         // FileFilter per filtraggio file da dover elaborare
         // solo file con estensione .json
-        FileFilter fileFilter = new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                return pathname.isFile() && pathname.getPath().endsWith(".json");
-            }
-        };
+        FileFilter fileFilter =
+                pathname -> pathname.isFile() && pathname.getPath().endsWith(".json");
 
         // caricamento da locale degli utenti
         int numOfUsers = 0;
@@ -143,7 +136,7 @@ public class PersistentData implements Registration, TCPOperations {
                     } catch (NoSuchAddressException e) {
                         System.out.println("There are no more multicast addresses...");
                         throw new IOException();
-                    } catch (AlreadyInitializedException e) {
+                    } catch (AlreadyInitialedException e) {
                         System.out.println("Project seems to be already initialized...");
                         throw new IOException();
                     }
@@ -202,6 +195,134 @@ public class PersistentData implements Registration, TCPOperations {
         } else {
             this.userStatus.replace(username, UserStatus.OFFLINE);
         }
+    }
+
+    @Override
+    public List<Project> listProjects(String username) throws UserNotExistsException {
+        if (!this.users.containsKey(username))
+            throw new UserNotExistsException();
+        List<Project> toReturn = new ArrayList<>();
+        for (String key : this.projects.keySet()) {
+            Project p = this.projects.get(key);
+            if (p.getMembers().contains(username))
+                toReturn.add(p);
+        }
+        return toReturn;
+    }
+
+    @Override
+    public void createProject(String projectName)
+            throws ProjectAlreadyExistsException, NoSuchAddressException, IOException {
+        if (this.projects.containsKey(projectName))
+            throw new ProjectAlreadyExistsException();
+        Project newProject = new Project(projectName);
+        this.storeProject(newProject);
+        this.projects.put(projectName, newProject);
+    }
+
+    @Override
+    public void addMember(String projectName, String username, String whoRequest)
+            throws ProjectNotExistsException, UnauthorizedUserException, UserAlreadyPresentException, UserNotExistsException {
+        Project project;
+        if ((project = this.projects.get(projectName)) == null)
+            throw new ProjectNotExistsException();
+        if (!project.getMembers().contains(whoRequest))
+            throw new UnauthorizedUserException();
+        if (!this.users.containsKey(username))
+            throw new UserNotExistsException();
+        project.addMember(username);
+    }
+
+    @Override
+    public List<String> showMembers(String projectName, String whoRequest) throws ProjectNotExistsException, UnauthorizedUserException {
+        Project project;
+        if ((project = this.projects.get(projectName)) == null)
+            throw new ProjectNotExistsException();
+        List<String> members = project.getMembers();
+        if (!members.contains(whoRequest))
+            throw new UnauthorizedUserException();
+        return members;
+    }
+
+    @Override
+    public List<Card> showCards(String projectName, String whoRequest) throws ProjectNotExistsException, UnauthorizedUserException {
+        Project project;
+        if ((project = this.projects.get(projectName)) == null)
+            throw new ProjectNotExistsException();
+        if (!project.getMembers().contains(whoRequest))
+            throw new UnauthorizedUserException();
+        return project.getAllCards();
+    }
+
+    @Override
+    public Card showCard(String projectName, String cardName, String whoRequest) throws ProjectNotExistsException, UnauthorizedUserException, CardNotExistsException {
+        Project project;
+        if ((project = this.projects.get(projectName)) == null)
+            throw new ProjectNotExistsException();
+        if (!project.getMembers().contains(whoRequest))
+            throw new UnauthorizedUserException();
+        return project.getCard(cardName);
+    }
+
+    @Override
+    public void addCard(String projectName, String cardName, String description, String whoRequest) throws ProjectNotExistsException, UnauthorizedUserException, CardAlreadyExistsException, IOException {
+        Project project;
+        if ((project = this.projects.get(projectName)) == null)
+            throw new ProjectNotExistsException();
+        if (!project.getMembers().contains(whoRequest))
+            throw new UnauthorizedUserException();
+        Card newCard = new Card(cardName, description);
+        project.addCard(newCard);
+
+        this.storeCard(newCard, projectName);
+        this.storeProject(project);
+    }
+
+    @Override
+    public void moveCard(String projectName, String cardName, CardStatus from, CardStatus to, String whoRequest) throws ProjectNotExistsException, UnauthorizedUserException, CardNotExistsException, OperationNotAllowedException, IOException {
+        Project project;
+        if ((project = this.projects.get(projectName)) == null)
+            throw new ProjectNotExistsException();
+        if (!project.getMembers().contains(whoRequest))
+            throw new UnauthorizedUserException();
+        project.moveCard(cardName, from, to);
+        Card moved = project.getCard(cardName);
+
+        this.storeCard(moved, projectName);
+        this.storeProject(project);
+    }
+
+    @Override
+    public List<Movement> getCardHistory(String projectName, String cardName, String whoRequest) throws ProjectNotExistsException, UnauthorizedUserException, CardNotExistsException {
+        Project project;
+        if ((project = this.projects.get(projectName)) == null)
+            throw new ProjectNotExistsException();
+        if (!project.getMembers().contains(whoRequest))
+            throw new UnauthorizedUserException();
+        Card card = project.getCard(cardName);
+        return card.getMovements();
+    }
+
+    @Override
+    public String readChat(String projectName, String whoRequest) throws ProjectNotExistsException, UnauthorizedUserException {
+        Project project;
+        if ((project = this.projects.get(projectName)) == null)
+            throw new ProjectNotExistsException();
+        if (!project.getMembers().contains(whoRequest))
+            throw new UnauthorizedUserException();
+        return project.getChatAddress();
+    }
+
+    @Override
+    public void cancelProject(String projectName, String whoRequest) throws ProjectNotExistsException, UnauthorizedUserException, ProjectNotCloseableException {
+        Project project;
+        if ((project = this.projects.get(projectName)) == null)
+            throw new ProjectNotExistsException();
+        if (!project.getMembers().contains(whoRequest))
+            throw new UnauthorizedUserException();
+        if (!project.isCloseable())
+            throw new ProjectNotCloseableException();
+        this.projects.remove(projectName);
     }
 
     @Override
@@ -311,11 +432,11 @@ public class PersistentData implements Registration, TCPOperations {
      * @param projectCardList lista delle card del progetto che stiamo elaborando
      *
      * @throws IOException se ci sono errori nel caricamento
-     * @throws AlreadyInitializedException
+     * @throws AlreadyInitialedException
      * se alcuni campi del progetto non possono essere inizializzati perchè lo sono già
      */
     private void loadProject(File projectInfo, ByteBuffer buffer, List<Card> projectCardList)
-            throws IOException, NoSuchAddressException, AlreadyInitializedException {
+            throws IOException, NoSuchAddressException, AlreadyInitialedException {
         // carico il file sul buffer
         this.readFile(projectInfo, buffer);
 
