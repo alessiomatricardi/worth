@@ -35,7 +35,7 @@ public class PersistentData implements Registration, TCPOperations {
     private final static String STORAGE_FOLDER_PATH = "./storage/";
     private final static String PROJECTS_FOLDER_PATH = STORAGE_FOLDER_PATH + "projects/";
     private final static String USERS_FOLDER_PATH = STORAGE_FOLDER_PATH + "users/";
-    private final static String PROJECT_FILENAME = "info.json";
+    private final static String PROJECT_CONFIG_FILENAME = "info.json";
     private static final int BUFFER_SIZE = 1024*1024; // spazio di allocazione del buffer
 
     private Map<String, User> users;
@@ -99,16 +99,9 @@ public class PersistentData implements Registration, TCPOperations {
         File[] usersList = directory.listFiles(fileFilter);
         if (usersList != null) {
             for (File userFile : usersList) {
-                // elaboro file utente
-                this.readFile(userFile, buffer);
+                // carico utente nella struttura dati
+                this.loadUser(userFile, buffer);
 
-                // lettura dal buffer dell'utente
-                User user = mapper.reader().forType(new TypeReference<User>() {})
-                        .readValue(buffer.array());
-
-                // inserisco nelle strutture dati
-                this.users.put(user.getUsername(), user);
-                this.userStatus.put(user.getUsername(), UserStatus.OFFLINE);
                 ++numOfUsers;
             }
         }
@@ -125,7 +118,8 @@ public class PersistentData implements Registration, TCPOperations {
                 File[] projectFileList = projectDir.listFiles(fileFilter);
                 if (projectFileList != null) {
                     if (projectFileList.length == 0) {
-                        // todo vuoto impossibile
+                        System.out.format("Project %s doesn't have config file (%s)",
+                                projectDir.getName(), PROJECT_CONFIG_FILENAME);
                     }
                     // lista delle card del progetto
                     List<Card> projectCardList = new ArrayList<>();
@@ -133,34 +127,27 @@ public class PersistentData implements Registration, TCPOperations {
                     // elaboro cards
                     for (File cardFile : projectFileList) {
                         // se il file è quello del progetto, lo salvo e lo elaboro alla fine
-                        if (cardFile.getName().equals(PROJECT_FILENAME)) {
+                        if (cardFile.getName().equals(PROJECT_CONFIG_FILENAME)) {
                             projectInfo = cardFile;
                             continue;
                         }
 
-                        // elaboro file card
-                        this.readFile(cardFile, buffer);
-
-                        // lettura dal buffer della card
-                        Card card = mapper.reader().forType(new TypeReference<Card>() {})
-                                .readValue(buffer.array());
-                        projectCardList.add(card);
+                        // carico la card nella lista delle card del progetto
+                        this.loadCard(cardFile, buffer, projectCardList);
                     }
 
                     // ora posso elaborare il progetto
-
-                    this.readFile(projectInfo, buffer);
-
-                    // lettura dal buffer del progetto
-                    Project project = mapper.reader().forType(new TypeReference<Project>() {})
-                            .readValue(buffer.array());
+                    // lo carico sulla struttura dati
                     try {
-                        project.initCardList(projectCardList);
-                        project.initChatAddress(MulticastAddressManager.getAddress());
+                        this.loadProject(projectInfo, buffer, projectCardList);
                     } catch (NoSuchAddressException e) {
-                        e.printStackTrace();
+                        System.out.println("There are no more multicast addresses...");
+                        throw new IOException();
+                    } catch (AlreadyInitializedException e) {
+                        System.out.println("Project seems to be already initialized...");
+                        throw new IOException();
                     }
-                    this.projects.put(project.getName(), project);
+
                     ++numOfProjects;
                 }
             }
@@ -265,7 +252,7 @@ public class PersistentData implements Registration, TCPOperations {
      * @throws IOException se ci sono errori nel salvataggio
      */
     private void storeProject(Project project) throws IOException {
-        String fileName = PROJECTS_FOLDER_PATH + project.getName() + "/" + PROJECT_FILENAME;
+        String fileName = PROJECTS_FOLDER_PATH + project.getName() + "/" + PROJECT_CONFIG_FILENAME;
         FileChannel outChannel = FileChannel.open(Paths.get(fileName), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         byte[] byteProject = mapper.writeValueAsBytes(project);
 
@@ -274,6 +261,83 @@ public class PersistentData implements Registration, TCPOperations {
             outChannel.write(bb);
     }
 
+    /**
+     * Deserializzazione dell'utente definito dal file userFile
+     *
+     * @param userFile file dell'utente
+     * @param buffer buffer utilizzato per caricamento
+     *
+     * @throws IOException se ci sono errori nel caricamento
+     */
+    private void loadUser(File userFile, ByteBuffer buffer) throws IOException {
+        // carico il file sul buffer
+        this.readFile(userFile, buffer);
+
+        // lettura dal buffer dell'utente
+        User user = mapper.reader().forType(new TypeReference<User>() {})
+                .readValue(buffer.array());
+
+        // inserisco nelle strutture dati
+        this.users.put(user.getUsername(), user);
+        this.userStatus.put(user.getUsername(), UserStatus.OFFLINE);
+    }
+
+    /**
+     * Deserializzazione di una card definita dal file cardFile
+     *
+     * @param cardFile file della card
+     * @param buffer buffer utilizzato per caricamento
+     * @param projectCardList lista delle card del progetto che stiamo elaborando
+     *
+     * @throws IOException se ci sono errori nel caricamento
+     */
+    private void loadCard(File cardFile, ByteBuffer buffer, List<Card> projectCardList)
+            throws IOException {
+        // carico il file sul buffer
+        this.readFile(cardFile, buffer);
+
+        // lettura dal buffer della card
+        Card card = mapper.reader().forType(new TypeReference<Card>() {})
+                .readValue(buffer.array());
+        projectCardList.add(card);
+
+    }
+
+    /**
+     * Deserializzazione di un progetto definito dal file projectInfo
+     *
+     * @param projectInfo file del progetto
+     * @param buffer buffer utilizzato per caricamento
+     * @param projectCardList lista delle card del progetto che stiamo elaborando
+     *
+     * @throws IOException se ci sono errori nel caricamento
+     * @throws AlreadyInitializedException
+     * se alcuni campi del progetto non possono essere inizializzati perchè lo sono già
+     */
+    private void loadProject(File projectInfo, ByteBuffer buffer, List<Card> projectCardList)
+            throws IOException, NoSuchAddressException, AlreadyInitializedException {
+        // carico il file sul buffer
+        this.readFile(projectInfo, buffer);
+
+        // lettura dal buffer del progetto
+        Project project = mapper.reader().forType(new TypeReference<Project>() {})
+                .readValue(buffer.array());
+
+        project.initCardList(projectCardList);
+        project.initChatAddress(MulticastAddressManager.getAddress());
+
+        this.projects.put(project.getName(), project);
+    }
+
+    /**
+     * Caricamento del file sul buffer
+     *
+     * @param file file da dover caricare
+     * @param buffer buffer interessato del caricamento
+     *
+     * @throws IOException se ci sono errori nel caricamento
+     *
+     */
     private void readFile(File file, ByteBuffer buffer) throws IOException {
         FileChannel inChannel;
         if (file == null)

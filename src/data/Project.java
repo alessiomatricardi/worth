@@ -2,10 +2,7 @@ package worth.data;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import worth.exceptions.AlreadyExistsCardException;
-import worth.exceptions.CardNotExistsException;
-import worth.exceptions.NoSuchAddressException;
-import worth.exceptions.OperationNotAllowedException;
+import worth.exceptions.*;
 import worth.utils.MulticastAddressManager;
 
 import java.io.Serializable;
@@ -50,17 +47,27 @@ public class Project implements Serializable {
         this.cards = new ArrayList<>();
     }
 
-    public void initChatAddress(String address) {
+    /**
+     * questo metodo viene chiamato dal server per inizializzare
+     * l'indirizzo multicast del progetto durante la fase di deserializzazione
+     * non può essere chiamato da nessun altro
+     *
+     */
+    public void initChatAddress(String address) throws AlreadyInitializedException {
         if (this.chatAddress != null)
-            // throw todo
-            return;
+            throw new AlreadyInitializedException();
         this.chatAddress = address;
     }
 
-    public void initCardList(List<Card> cards) {
+    /**
+     * questo metodo viene chiamato dal server per inizializzare
+     * la lista delle cards precedentemente caricata
+     * non può essere chiamato da nessun altro
+     *
+     */
+    public void initCardList(List<Card> cards) throws AlreadyInitializedException {
         if (this.cards != null)
-            // throw todo
-            return;
+            throw new AlreadyInitializedException();
         this.cards = cards;
     }
 
