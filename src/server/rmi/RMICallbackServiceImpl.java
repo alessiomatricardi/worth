@@ -15,9 +15,18 @@ import java.util.List;
  */
 public class RMICallbackServiceImpl extends UnicastRemoteObject implements RMICallbackService {
     List<RMICallbackNotify> clients;
+    /*
+     * quando un client viene interrotto bruscamente non farà mai la unregister
+     * dal servizio rmi e, al momento di invio di una notifica
+     * il server riporta errori di connessione col suddetto client
+     * per tale ragione, se ci sono errori dovuti alla notifica
+     * il client verrà direttamente de-registrato dal servizio di callback
+     */
+    List<RMICallbackNotify> toDelete;
 
     public RMICallbackServiceImpl() throws RemoteException {
         clients = new ArrayList<>();
+        toDelete = new ArrayList<>();
     }
 
     @Override
@@ -36,15 +45,21 @@ public class RMICallbackServiceImpl extends UnicastRemoteObject implements RMICa
      * @param username nome utente da notificare ai client
      * @param status status dell'utente da notificare
      *
-     * @throws RemoteException se ci sono errori di connessione
-     * */
-    public void notifyUsers(String username, UserStatus status) throws RemoteException {
+     */
+    public void notifyUsers(String username, UserStatus status) {
         doCallbacks(username, status);
     }
 
-    private synchronized void doCallbacks(String username, UserStatus status) throws RemoteException {
+    private synchronized void doCallbacks(String username, UserStatus status) {
         for (RMICallbackNotify client : clients) {
-            client.notifyUpdate(username, status);
+            try {
+                client.notifyUpdate(username, status);
+            } catch (RemoteException e) {
+                toDelete.add(client);
+            }
+        }
+        while (!toDelete.isEmpty()) {
+            clients.remove(toDelete.remove(0));
         }
     }
 

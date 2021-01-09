@@ -84,4 +84,6 @@ public class UIMessages {
     // messaggio "utente già presente nel progetto"
     public static final String USER_ALREADY_PRESENT = "The user is already in this project.";
 
+    public static final String LOGOUT_MESSAGE = "Do you want to log out from Worth?";
+
 }

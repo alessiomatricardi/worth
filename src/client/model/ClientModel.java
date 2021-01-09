@@ -34,7 +34,8 @@ import java.util.Map;
  */
 public class ClientModel {
     private static final int ALLOCATION_SIZE = 1024*1024; // spazio di allocazione del buffer
-    private boolean isLogged; // l'utente è loggato?
+    private boolean isLogged;                   // l'utente è loggato?
+    private String username;                    // per tenere traccia dello username dell'utente
     private SocketChannel socket;               // socket per instaurazione connessione
     private ObjectMapper mapper;                // mapper per serializzazione/deserializzazione
     private Map<String, UserStatus> userStatus; // lista degli stati degli utenti
@@ -59,18 +60,22 @@ public class ClientModel {
         this.userStatus = Collections.synchronizedMap(new HashMap<>());
         this.callbackNotify = new RMICallbackNotifyImpl(this.userStatus);
         this.isLogged = false;
+        this.username = "";
     }
 
-    public void closeConnection() {
+    public void closeConnection() { // todo possibile chiudere threads
         if (!this.isLogged) return;
         try {
-            logout();
+            this.unregisterForCallback();
             this.socket.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * Operazione registrazione via RMI
+     */
     public void register(String username, String password)
             throws RemoteException, NotBoundException, CharactersNotAllowedException,
             UsernameNotAvailableException, PasswordTooShortException {
@@ -81,7 +86,9 @@ public class ClientModel {
         // call al servizio RMI
         regService.register(username, password);
     }
-
+    /**
+     * Operazioni TCP
+     */
     public void login(String username, String password)
             throws UserNotExistsException, AlreadyLoggedException, WrongPasswordException, CommunicationException {
         // prepara messaggio da inviare
@@ -117,6 +124,7 @@ public class ClientModel {
         }
 
         // sono loggato
+        this.username = username;
         this.isLogged = true;
     }
 
@@ -142,6 +150,7 @@ public class ClientModel {
         }
 
         // non sono più loggato
+        this.username = "";
         this.isLogged = false;
     }
 
@@ -161,6 +170,14 @@ public class ClientModel {
             case CommunicationProtocol.CREATEPROJECT_NOMOREADDRESSES -> throw new NoSuchAddressException();
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
         }
+    }
+
+    /**
+     * Operazioni
+     */
+
+    public String getUsername() {
+        return this.username;
     }
 
     /**
@@ -214,6 +231,10 @@ public class ClientModel {
             throw new CommunicationException();
         }
     }
+
+    /*
+     * Operazioni Callback RMI
+     */
 
     /**
      * Registra il client per il servizio di callback

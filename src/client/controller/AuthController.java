@@ -41,6 +41,8 @@ public class AuthController {
         try {
             model.login(username, password);
             this.changeContext();
+            // svuoto il campo password
+            this.view.getPasswordTextField().setText("");
         } catch (CommunicationException e) {
             Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
         } catch (UserNotExistsException e) {

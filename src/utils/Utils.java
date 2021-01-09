@@ -65,4 +65,24 @@ public class Utils {
         );
     }
 
+    /**
+     * @param message messaggio da stampare a video
+     *
+     * @return from JOptionPane.showOptionDialog method:
+     * "an integer indicating the option chosen by the user,
+     * or CLOSED_OPTION if the user closed the dialog"
+     */
+    public static int showQuestionMessageDialog(String message) {
+        return JOptionPane.showOptionDialog(
+                null,
+                message,
+                "Worth",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                null,
+                null
+        );
+    }
+
 }

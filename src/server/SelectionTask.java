@@ -3,6 +3,7 @@ package worth.server;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import worth.data.Card;
 import worth.data.CardStatus;
 import worth.data.UserStatus;
 import worth.exceptions.*;
@@ -117,6 +118,17 @@ public class SelectionTask implements Runnable {
 
                         // è stata chiusa la connessione dal client
                         if (byteReaded == -1) {
+                            // se l'utente è online, devo fare log out
+                            String username = attachment.getUsername();
+                            if (username != null) {
+                                try {
+                                    data.logout(username);
+                                    callbackService.notifyUsers(username, UserStatus.OFFLINE);
+                                } catch (UserNotExistsException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
                             key.cancel();
                             client.close();
                             continue;
@@ -136,6 +148,7 @@ public class SelectionTask implements Runnable {
 
                         // in base al comando, ci saranno diversi comportamenti
                         switch (command) { // todo manca qualcosa
+                            // todo server scrive su chat multicast
                             case CommunicationProtocol.LOGIN_CMD: {
                                 // controllo numero di parametri
                                 if (arguments.size() != 2) {
@@ -292,7 +305,8 @@ public class SelectionTask implements Runnable {
 
                                 String projectName = arguments.get(0);
                                 try {
-                                    data.showCards(projectName, username);
+                                    List<Card> cards = data.showCards(projectName, username);
+                                    responseBody = this.mapper.writeValueAsString(cards);
                                 } catch (ProjectNotExistsException e) {
                                     responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
                                 } catch (UnauthorizedUserException e) {

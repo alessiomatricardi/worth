@@ -5,6 +5,8 @@ import java.awt.*;
 
 /**
  * Created by alessiomatricardi on 02/01/21
+ *
+ * Pannello di autorizzazione di un utente
  */
 public class AuthUI extends JPanel {
     private static final int WIDTH = 400; // larghezza del panel

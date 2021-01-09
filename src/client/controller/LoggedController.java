@@ -3,6 +3,9 @@ package worth.client.controller;
 import worth.client.model.ClientModel;
 import worth.client.ui.LoggedUI;
 import worth.client.ui.WorthFrame;
+import worth.client.ui.loggedPanels.HomePanel;
+import worth.client.ui.loggedPanels.ProjectDetailPanel;
+import worth.client.ui.loggedPanels.ShowProjectsPanel;
 import worth.exceptions.CommunicationException;
 import worth.exceptions.NoSuchAddressException;
 import worth.exceptions.ProjectAlreadyExistsException;
@@ -28,13 +31,50 @@ public class LoggedController {
     }
 
     private void initController() {
-        this.view.getMyProjectsButton().addActionListener(e -> this.showProjects());
-        this.view.getCreateProjectButton().addActionListener(e -> this.createProject());
-        this.view.getLogoutButton().addActionListener(e -> this.logout());
+        // azioni possibili in LoggedUI
+        this.view.getHomeButton().addActionListener(e -> {
+            this.showHome();
+        });
+        this.view.getUserListButton().addActionListener(e -> {
+            // recupera utenti todo
+            this.showUsers();
+
+        });
+        this.view.getShowProjectsButton().addActionListener(e -> {
+            // recupera progetti todo
+            this.showProjects();
+
+        });
+        this.view.getLogoutButton().addActionListener(e -> {
+            int result = Utils.showQuestionMessageDialog(UIMessages.LOGOUT_MESSAGE);
+            if (result == JOptionPane.YES_OPTION) {
+                this.logout();
+            }
+        });
+
+        // azioni possibili in panel contenuti dentro la vista
+        HomePanel homePanel = this.view.getHomePanel();
+
+        ShowProjectsPanel showProjectsPanel = this.view.getShowProjectsPanel();
+
+        ProjectDetailPanel projectDetailPanel = this.view.getProjectDetailPanel();
+
+    }
+
+    private void showHome() {
+        String username = this.model.getUsername();
+        this.view.getHomePanel().setUsernameLabel(username);
+        this.view.getHomePanel().revalidate();
+        this.view.getHomePanel().repaint();
+        this.showPanel(LoggedUI.HOME_PANEL);
+    }
+
+    private void showUsers() {
+        this.showPanel(LoggedUI.USERS_PANEL);
     }
 
     private void showProjects() {
-
+        this.showPanel(LoggedUI.PROJECTS_PANEL);
     }
 
     private void createProject() {
@@ -59,6 +99,10 @@ public class LoggedController {
         } catch (CommunicationException e) {
             Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
         }
+    }
+
+    private void showPanel(String panelName) {
+        this.view.getCardLayout().show(this.view.getContainerPanel(), panelName);
     }
 
     private void changeContext() {

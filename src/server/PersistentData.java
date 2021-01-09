@@ -322,9 +322,22 @@ public class PersistentData implements Registration, TCPOperations {
             throw new UnauthorizedUserException();
         if (!project.isCloseable())
             throw new ProjectNotCloseableException();
+        // libero indirizzo multicast
         MulticastAddressManager.freeAddress(project.getChatAddress());
+        // rimuovo progetto
         this.projects.remove(projectName);
-        // todo rimuovi files
+
+        // rimozione files del progetto
+        File projectDir = new File(PROJECTS_FOLDER_PATH + projectName);
+        if (projectDir.exists() && projectDir.isDirectory()) {
+            // elimino tutti i file al suo interno
+            File[] files = projectDir.listFiles();
+            for (File file : files) {
+                file.delete();
+            }
+            // elimino directory
+            projectDir.delete();
+        }
     }
 
     @Override
