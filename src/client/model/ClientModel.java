@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import worth.client.model.rmi.RMICallbackNotify;
 import worth.client.model.rmi.RMICallbackNotifyImpl;
-import worth.data.UserStatus;
+import worth.data.*;
 import worth.protocol.CommunicationProtocol;
 import worth.protocol.ResponseMessage;
 import worth.exceptions.*;
@@ -22,10 +22,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.text.SimpleDateFormat;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by alessiomatricardi on 03/01/21
@@ -33,7 +30,7 @@ import java.util.Map;
  * Model (logica) del client secondo il pattern MVC
  */
 public class ClientModel {
-    private static final int ALLOCATION_SIZE = 1024*1024; // spazio di allocazione del buffer
+    private static final int ALLOCATION_SIZE = 512*512; // spazio di allocazione del buffer
     private boolean isLogged;                   // l'utente è loggato?
     private String username;                    // per tenere traccia dello username dell'utente
     private SocketChannel socket;               // socket per instaurazione connessione
@@ -154,8 +151,27 @@ public class ClientModel {
         this.isLogged = false;
     }
 
+    public Map<String, UserStatus> listUsers() {
+        return this.userStatus;
+    }
+
+    public Map<String, UserStatus> listOnlineUsers() {
+        Map<String, UserStatus> toReturn = new HashMap<>(this.userStatus);
+        Set<String> keySet = toReturn.keySet();
+        for (String key : keySet) {
+            if (toReturn.get(key) == UserStatus.OFFLINE) {
+                toReturn.remove(key);
+            }
+        }
+        return toReturn;
+    }
+
+    public List<Project> listProjects() {
+        return null; // todo
+    }
+
     public void createProject(String projectName)
-            throws ProjectAlreadyExistsException, NoSuchAddressException, CommunicationException {
+            throws ProjectAlreadyExistsException, NoSuchAddressException, CharactersNotAllowedException, CommunicationException {
         // prepara messaggio da inviare
         String messageToSend = this.encodeMessageArguments(
                 CommunicationProtocol.CREATEPROJECT_CMD,
@@ -168,13 +184,50 @@ public class ClientModel {
         switch (response.getStatusCode()) { // casi di errori
             case CommunicationProtocol.CREATEPROJECT_ALREADYEXISTS -> throw new ProjectAlreadyExistsException();
             case CommunicationProtocol.CREATEPROJECT_NOMOREADDRESSES -> throw new NoSuchAddressException();
+            case CommunicationProtocol.CREATEPROJECT_CHAR_NOT_ALLOW -> throw new CharactersNotAllowedException();
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
         }
     }
 
-    /**
-     * Operazioni
-     */
+    public void addMember(String projectName, String username) {
+        // todo
+    }
+
+    public List<String> showMembers(String projectName) {
+        return null; // todo
+    }
+
+    public List<String> showCards(String projectName) {
+        return null;        // todo
+    }
+
+    public Card showCard(String projectName, String cardName) {
+        return null;        // todo
+    }
+
+    public void addCard(String projectName, String cardName, String descrizione) {
+        // todo
+    }
+
+    public void moveCard(String projectName, String cardName, CardStatus from, CardStatus to) {
+        // todo
+    }
+
+    public List<Movement> getCardHistory(String projectName, String cardName) {
+        return null;        // todo
+    }
+
+    public void readChat(String projectName) {
+        // todo
+    }
+
+    public void sendChatMsg(String projectName, String messaggio) {
+        // todo
+    }
+
+    public void cancelProject(String projectName) {
+        // todo
+    }
 
     public String getUsername() {
         return this.username;
@@ -204,27 +257,42 @@ public class ClientModel {
      * */
     private ResponseMessage sendTCPRequest(String messageToSend) throws CommunicationException {
         try {
+            // preparo messaggio
             byte[] byteMessage = messageToSend.getBytes(StandardCharsets.UTF_8);
-            ByteBuffer sendBuffer = ByteBuffer.wrap(byteMessage);
-            socket.write(sendBuffer);
+            // ottengo la sua lunghezza
+            int messageLength = byteMessage.length;
+            // scrivo nel buffer la sua lunghezza e il messaggio
+            ByteBuffer sendBuffer = ByteBuffer.allocate(Integer.BYTES + messageLength);
+            sendBuffer.putInt(messageLength).put(byteMessage);
+            sendBuffer.flip();
+            while(sendBuffer.hasRemaining())
+                socket.write(sendBuffer);
             sendBuffer.clear();
 
             // attendo risposta server
             ByteBuffer readBuffer = ByteBuffer.allocate(ALLOCATION_SIZE);
-            socket.read(readBuffer);
-            /* todo guarda non bloccante
-             * int total = 0;
-             * while (true) {
-             *   int readed = socket.read(readBuffer);
-             *   total += readed;
-             *   if (readed == 0 && total > 0) break;
-             * }
-             * */
-            readBuffer.flip();
-            String stringResponse = StandardCharsets.UTF_8.decode(readBuffer).toString();
+            int byteReaded;
+            int totalReaded = 0;
+            messageLength = -1;
+            StringBuilder responseMessage = new StringBuilder();
+            do {
+                byteReaded = socket.read(readBuffer);
+                totalReaded += byteReaded;
+
+                readBuffer.flip();
+
+                // salvo lunghezza del messaggio
+                if (messageLength == -1)
+                    messageLength = readBuffer.getInt();
+
+                responseMessage.append(StandardCharsets.UTF_8.decode(readBuffer).toString());
+
+                readBuffer.clear();
+            } while (totalReaded < messageLength);
+
+            String stringResponse = responseMessage.toString();
             System.out.println(stringResponse);
-            ResponseMessage response = this.mapper.readValue(stringResponse, new TypeReference<ResponseMessage>() {
-            });
+            ResponseMessage response = this.mapper.readValue(stringResponse, new TypeReference<ResponseMessage>() {});
             return response;
         } catch (IOException e) {
             e.printStackTrace();

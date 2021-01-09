@@ -132,7 +132,7 @@ public class Project implements Serializable {
 
         // aggiungo movimento alla card
         Card thisCard = this.cards.get(this.cards.indexOf(temp));
-        thisCard.addMovement(new Movement(from, to));
+        thisCard.changeStatus(to);
     }
 
     public void addCard(Card card) throws CardAlreadyExistsException {

@@ -28,8 +28,8 @@ public class UIMessages {
 
     // messaggio "caratteri non consentiti"
     public static final String CHARACTERS_NOT_ALLOWED =
-            "We're sorry, but this field contains some characters not allowed.\n" +
-                    "Valid username should contain only alphanumeric characters, . - and _";
+            "We're sorry, but this field contains some not allowed characters.\n" +
+                    "It should contain only alphanumeric characters, . - and _";
 
     //
     public static final String EMPTY_FIELD = "Some fields seems to be empty or blank.\n";
@@ -84,6 +84,10 @@ public class UIMessages {
     // messaggio "utente già presente nel progetto"
     public static final String USER_ALREADY_PRESENT = "The user is already in this project.";
 
+    // messaggio "sei sicuro di voler fare il logout"
     public static final String LOGOUT_MESSAGE = "Do you want to log out from Worth?";
+
+    // messaggio "progetto creato con successo"
+    public static final String PROJECT_SUCCESS = "Project successfully created.";
 
 }

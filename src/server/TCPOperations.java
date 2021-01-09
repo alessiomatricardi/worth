@@ -103,7 +103,7 @@ public interface TCPOperations {
      * @throws UnauthorizedUserException se non si hanno le autorizzazioni necessarie
      *
      */
-    List<Card> showCards(String projectName, String whoRequest)
+    List<String> showCards(String projectName, String whoRequest)
             throws ProjectNotExistsException, UnauthorizedUserException;
 
     /**

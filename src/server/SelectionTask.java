@@ -99,22 +99,23 @@ public class SelectionTask implements Runnable {
                         // read message from channel
                         int byteReaded;
                         int totalReaded = 0;
+                        int messageLength = -1;
                         StringBuilder messageReceived = new StringBuilder();
-
-                        while(true) {
+                        do {
                             byteReaded = client.read(buffer);
                             if (byteReaded == -1) break;
-
                             totalReaded += byteReaded;
 
                             buffer.flip();
 
+                            // salvo lunghezza del messaggio
+                            if (messageLength == -1)
+                                messageLength = buffer.getInt();
+
                             messageReceived.append(StandardCharsets.UTF_8.decode(buffer).toString());
 
                             buffer.clear();
-
-                            if (byteReaded == 0 && totalReaded > 0) break;
-                        }
+                        } while (totalReaded < messageLength);
 
                         // è stata chiusa la connessione dal client
                         if (byteReaded == -1) {
@@ -194,6 +195,9 @@ public class SelectionTask implements Runnable {
                                 }
                                 break;
                             }
+                            case CommunicationProtocol.LISTPROJECTS_CMD: {
+                                break; // todo
+                            }
                             case CommunicationProtocol.CREATEPROJECT_CMD: {
                                 // controllo numero di parametri
                                 if (arguments.size() != 1) {
@@ -205,6 +209,11 @@ public class SelectionTask implements Runnable {
                                 String username = attachment.getUsername();
 
                                 String projectName = arguments.get(0);
+                                if (!projectName.matches(CommunicationProtocol.STRING_REGEX)) {
+                                    responseCode = CommunicationProtocol.CREATEPROJECT_CHAR_NOT_ALLOW;
+                                    break;
+                                }
+
                                 try {
                                     data.createProject(projectName, username);
                                 } catch (ProjectAlreadyExistsException e) {
@@ -213,6 +222,56 @@ public class SelectionTask implements Runnable {
                                     responseCode = CommunicationProtocol.CREATEPROJECT_NOMOREADDRESSES;
                                 }
                                 break;
+                            }
+                            case CommunicationProtocol.ADD_MEMBER_CMD: {
+                                // controllo numero di parametri
+                                if (arguments.size() != 2) {
+                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
+                                    break;
+                                }
+                                // il nome utente viene prelevato direttamente dal server
+                                String username = attachment.getUsername();
+
+                                String projectName = arguments.get(0);
+                                String userToAdd = arguments.get(1);
+                                try {
+                                    data.addMember(projectName, userToAdd, username);
+                                } catch (ProjectNotExistsException e) {
+                                    responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
+                                } catch (UnauthorizedUserException e) {
+                                    responseCode = CommunicationProtocol.UNAUTHORIZED;
+                                } catch (UserAlreadyPresentException e) {
+                                    responseCode = CommunicationProtocol.ADD_MEMBER_ALREADYPRESENT;
+                                } catch (UserNotExistsException e) {
+                                    responseCode = CommunicationProtocol.USER_NOT_EXISTS;
+                                }
+                                break;
+                            }
+                            case CommunicationProtocol.SHOW_MEMBERS_CMD: {
+                                break; // todo
+                            }
+                            case CommunicationProtocol.SHOW_CARDS_CMD: {
+                                // controllo numero di parametri
+                                if (arguments.size() != 1) {
+                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
+                                    break;
+                                }
+                                // il nome utente viene prelevato direttamente dal server
+                                String username = attachment.getUsername();
+
+                                String projectName = arguments.get(0);
+                                try {
+                                    List<String> cards = data.showCards(projectName, username);
+                                    responseBody = this.mapper.writeValueAsString(cards);
+                                } catch (ProjectNotExistsException e) {
+                                    responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
+                                } catch (UnauthorizedUserException e) {
+                                    responseCode = CommunicationProtocol.UNAUTHORIZED;
+                                }
+                                break;
+                            }
+                            case CommunicationProtocol.SHOW_CARD_CMD: {
+                                break; // todo
                             }
                             case CommunicationProtocol.ADD_CARD_CMD: {
                                 // controllo numero di parametri
@@ -270,49 +329,11 @@ public class SelectionTask implements Runnable {
                                 }
                                 break;
                             }
-                            case CommunicationProtocol.ADD_MEMBER_CMD: {
-                                // controllo numero di parametri
-                                if (arguments.size() != 2) {
-                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
-                                    break;
-                                }
-                                // il nome utente viene prelevato direttamente dal server
-                                String username = attachment.getUsername();
-
-                                String projectName = arguments.get(0);
-                                String userToAdd = arguments.get(1);
-                                try {
-                                    data.addMember(projectName, userToAdd, username);
-                                } catch (ProjectNotExistsException e) {
-                                    responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
-                                } catch (UnauthorizedUserException e) {
-                                    responseCode = CommunicationProtocol.UNAUTHORIZED;
-                                } catch (UserAlreadyPresentException e) {
-                                    responseCode = CommunicationProtocol.ADD_MEMBER_ALREADYPRESENT;
-                                } catch (UserNotExistsException e) {
-                                    responseCode = CommunicationProtocol.USER_NOT_EXISTS;
-                                }
-                                break;
+                            case CommunicationProtocol.CARD_HISTORY_CMD: {
+                                break; // todo
                             }
-                            case CommunicationProtocol.SHOW_CARDS_CMD: {
-                                // controllo numero di parametri
-                                if (arguments.size() != 1) {
-                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
-                                    break;
-                                }
-                                // il nome utente viene prelevato direttamente dal server
-                                String username = attachment.getUsername();
-
-                                String projectName = arguments.get(0);
-                                try {
-                                    List<Card> cards = data.showCards(projectName, username);
-                                    responseBody = this.mapper.writeValueAsString(cards);
-                                } catch (ProjectNotExistsException e) {
-                                    responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
-                                } catch (UnauthorizedUserException e) {
-                                    responseCode = CommunicationProtocol.UNAUTHORIZED;
-                                }
-                                break;
+                            case CommunicationProtocol.READ_CHAT_CMD: {
+                                break; // todo
                             }
                             case CommunicationProtocol.CANCELPROJECT_CMD: {
                                 // controllo numero di parametri
@@ -350,7 +371,12 @@ public class SelectionTask implements Runnable {
 
                         // lo serializzo e lo inserisco nel buffer
                         byte[] byteResponse = this.mapper.writeValueAsBytes(response);
-                        buffer = ByteBuffer.wrap(byteResponse);
+                        // calcolo lunghezza messaggio
+                        messageLength = byteResponse.length;
+                        buffer = ByteBuffer.allocate(Integer.BYTES + messageLength);
+                        // inserisco lunghezza e messaggio
+                        buffer.putInt(messageLength).put(byteResponse);
+                        buffer.flip();
 
                         // salvo il buffer negli attachment
                         attachment.setBuffer(buffer);

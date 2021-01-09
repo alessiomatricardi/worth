@@ -27,7 +27,7 @@ public abstract class CommunicationProtocol {
     public static final int MIN_PASSWORD_LEN = 8;
 
     // REGEX username, solo a-z, A-Z, 0-9, . - _ consentiti
-    public static final String USERNAME_REGEX = "^[a-zA-Z0-9._-]+$";
+    public static final String STRING_REGEX = "^[a-zA-Z0-9._-]+$";
 
     // carattere separatore
     public static final String SEPARATOR = " ";
@@ -64,9 +64,21 @@ public abstract class CommunicationProtocol {
 
     public static final String LOGOUT_CMD = "logout";
 
+    public static final String LISTPROJECTS_CMD = "list_projects";
+
     public static final String CREATEPROJECT_CMD = "create_project";
     public static final int CREATEPROJECT_ALREADYEXISTS = 1;
     public static final int CREATEPROJECT_NOMOREADDRESSES = 2;
+    public static final int CREATEPROJECT_CHAR_NOT_ALLOW = 3;
+
+    public static final String ADD_MEMBER_CMD = "add_member";
+    public static final int ADD_MEMBER_ALREADYPRESENT = 1;
+
+    public static final String SHOW_MEMBERS_CMD = "show_members";
+
+    public static final String SHOW_CARDS_CMD = "show_cards";
+
+    public static final String SHOW_CARD_CMD = "show_card";
 
     public static final String ADD_CARD_CMD = "add_card";
     public static final int ADD_CARD_ALREADYEXISTS = 1;
@@ -74,10 +86,9 @@ public abstract class CommunicationProtocol {
     public static final String MOVE_CARD_CMD = "move_card";
     public static final int MOVE_CARD_NOT_ALLOWED = 1;
 
-    public static final String ADD_MEMBER_CMD = "add_member";
-    public static final int ADD_MEMBER_ALREADYPRESENT = 1;
+    public static final String CARD_HISTORY_CMD = "card_history";
 
-    public static final String SHOW_CARDS_CMD = "show_cards";
+    public static final String READ_CHAT_CMD = "read_chat";
 
     public static final String CANCELPROJECT_CMD = "cancel_project";
     public static final int CANCELPROJECT_NOTCLOSEABLE = 1;

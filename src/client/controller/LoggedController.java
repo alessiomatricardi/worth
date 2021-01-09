@@ -6,10 +6,7 @@ import worth.client.ui.WorthFrame;
 import worth.client.ui.loggedPanels.HomePanel;
 import worth.client.ui.loggedPanels.ProjectDetailPanel;
 import worth.client.ui.loggedPanels.ShowProjectsPanel;
-import worth.exceptions.CommunicationException;
-import worth.exceptions.NoSuchAddressException;
-import worth.exceptions.ProjectAlreadyExistsException;
-import worth.exceptions.UserNotExistsException;
+import worth.exceptions.*;
 import worth.utils.UIMessages;
 import worth.utils.Utils;
 
@@ -32,19 +29,12 @@ public class LoggedController {
 
     private void initController() {
         // azioni possibili in LoggedUI
-        this.view.getHomeButton().addActionListener(e -> {
-            this.showHome();
-        });
-        this.view.getUserListButton().addActionListener(e -> {
-            // recupera utenti todo
-            this.showUsers();
+        this.view.getHomeButton().addActionListener(e -> this.showHome());
 
-        });
-        this.view.getShowProjectsButton().addActionListener(e -> {
-            // recupera progetti todo
-            this.showProjects();
+        this.view.getUserListButton().addActionListener(e -> this.showUsers());
 
-        });
+        this.view.getShowProjectsButton().addActionListener(e -> this.showProjects());
+
         this.view.getLogoutButton().addActionListener(e -> {
             int result = Utils.showQuestionMessageDialog(UIMessages.LOGOUT_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
@@ -52,8 +42,9 @@ public class LoggedController {
             }
         });
 
-        // azioni possibili in panel contenuti dentro la vista
+        // azioni possibili in panel contenuti dentro la view
         HomePanel homePanel = this.view.getHomePanel();
+        homePanel.getCreateProjectButton().addActionListener(e -> this.createProject());
 
         ShowProjectsPanel showProjectsPanel = this.view.getShowProjectsPanel();
 
@@ -64,29 +55,40 @@ public class LoggedController {
     private void showHome() {
         String username = this.model.getUsername();
         this.view.getHomePanel().setUsernameLabel(username);
-        this.view.getHomePanel().revalidate();
-        this.view.getHomePanel().repaint();
+        this.updateUI(this.view.getHomePanel());
         this.showPanel(LoggedUI.HOME_PANEL);
     }
 
     private void showUsers() {
+        // recupera utenti todo
         this.showPanel(LoggedUI.USERS_PANEL);
     }
 
     private void showProjects() {
+        // recupera progetti todo
         this.showPanel(LoggedUI.PROJECTS_PANEL);
     }
 
     private void createProject() {
-        // prendi dati da casella
+        HomePanel homePanel = this.view.getHomePanel();
+        String projectName = homePanel.getProjectNameField().getText();
+        if (projectName.isBlank()) {
+            Utils.showErrorMessageDialog(UIMessages.EMPTY_FIELD);
+            return;
+        }
         try {
-            this.model.createProject("prova444"); // prova todo togli
+            this.model.createProject(projectName);
+            Utils.showInfoMessageDialog(UIMessages.PROJECT_SUCCESS);
+            // resetto campo
+            homePanel.getProjectNameField().setText("");
         } catch (CommunicationException e) {
             Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
         } catch (NoSuchAddressException e) {
             Utils.showErrorMessageDialog(UIMessages.NO_SUCH_ADDRESS);
         } catch (ProjectAlreadyExistsException e) {
             Utils.showErrorMessageDialog(UIMessages.PROJECT_ALREADY_EXISTS);
+        } catch (CharactersNotAllowedException e) {
+            Utils.showErrorMessageDialog(UIMessages.CHARACTERS_NOT_ALLOWED);
         }
     }
 
@@ -101,10 +103,17 @@ public class LoggedController {
         }
     }
 
+    private void updateUI(JPanel panel) {
+        panel.revalidate();
+        panel.repaint();
+    }
+
+    // visualizza un pannello todo completa
     private void showPanel(String panelName) {
         this.view.getCardLayout().show(this.view.getContainerPanel(), panelName);
     }
 
+    // torna alla schermata di login
     private void changeContext() {
         WorthFrame frame = (WorthFrame) SwingUtilities.getWindowAncestor(this.view);
         frame.getCardLayout().next(frame.getCardHolder());

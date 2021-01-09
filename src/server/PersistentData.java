@@ -245,13 +245,18 @@ public class PersistentData implements Registration, TCPOperations {
     }
 
     @Override
-    public List<Card> showCards(String projectName, String whoRequest) throws ProjectNotExistsException, UnauthorizedUserException {
+    public List<String> showCards(String projectName, String whoRequest) throws ProjectNotExistsException, UnauthorizedUserException {
         Project project;
         if ((project = this.projects.get(projectName)) == null)
             throw new ProjectNotExistsException();
         if (!project.getMembers().contains(whoRequest))
             throw new UnauthorizedUserException();
-        return project.getAllCards();
+        List<Card> cards = project.getAllCards();
+        List<String> toReturn = new ArrayList<>();
+        for (Card card : cards) {
+            toReturn.add(card.getName());
+        }
+        return toReturn;
     }
 
     @Override

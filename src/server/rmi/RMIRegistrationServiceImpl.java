@@ -32,7 +32,7 @@ public class RMIRegistrationServiceImpl extends UnicastRemoteObject implements R
     @Override
     public synchronized void register (String username, String password)
             throws RemoteException, CharactersNotAllowedException, UsernameNotAvailableException, PasswordTooShortException {
-        if (!username.matches(CommunicationProtocol.USERNAME_REGEX))
+        if (!username.matches(CommunicationProtocol.STRING_REGEX))
             throw new CharactersNotAllowedException();
         if (password.length() < CommunicationProtocol.MIN_PASSWORD_LEN)
             throw new PasswordTooShortException();
