@@ -213,4 +213,17 @@ public interface TCPOperations {
      *
      */
     Map<String, UserStatus> getUserStatus();
+
+    /**
+     * Ottieni l'indirizzo multicast del progetto projectName
+     *
+     * @param projectName nome del progetto
+     *
+     * @return indirizzo multicast del progetto
+     *
+     * @throws ProjectNotExistsException se il progetto non esiste
+     *
+     */
+    String getProjectChatAddress(String projectName) throws ProjectNotExistsException;
+
 }

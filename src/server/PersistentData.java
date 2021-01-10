@@ -350,6 +350,15 @@ public class PersistentData implements Registration, TCPOperations {
         return this.userStatus;
     }
 
+    @Override
+    public String getProjectChatAddress(String projectName) throws ProjectNotExistsException {
+        Project project;
+        project = this.projects.get(projectName);
+        if (project == null)
+            throw new ProjectNotExistsException();
+        return project.getChatAddress();
+    }
+
     /**
      * Salva l'utente user nello storage serializzandolo
      *

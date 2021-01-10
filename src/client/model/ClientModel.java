@@ -36,7 +36,7 @@ public class ClientModel {
     private final SocketChannel socket;               // socket per instaurazione connessione
     private final ObjectMapper mapper;                // mapper per serializzazione/deserializzazione
     private Map<String, UserStatus> userStatus; // lista degli stati degli utenti
-    private final RMICallbackNotify callbackNotify;   // gestione callback
+    private RMICallbackNotify callbackNotify;   // gestione callback
 
     // predispone la connessione del client con il server
     public ClientModel() throws IOException {
@@ -56,8 +56,8 @@ public class ClientModel {
         this.mapper.setDateFormat(dateFormat);
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        this.userStatus = Collections.synchronizedMap(new HashMap<>());
-        this.callbackNotify = new RMICallbackNotifyImpl(this.userStatus);
+        this.userStatus = null; // non è ancora il momento di inizializzarlo
+        this.callbackNotify = null; // non è ancora il momento di inizializzarlo
         this.isLogged = false;
         this.username = "";
     }
@@ -115,6 +115,11 @@ public class ClientModel {
                     new TypeReference<Map<String, UserStatus>>() {
                     }
             );
+            // deve rimanere synchronized
+            this.userStatus = Collections.synchronizedMap(this.userStatus);
+
+            // istanza callback
+            this.callbackNotify = new RMICallbackNotifyImpl(this.userStatus);
 
             // richiedo registrazione a servizio di callback
             this.registerForCallback();
@@ -154,15 +159,16 @@ public class ClientModel {
     }
 
     public Map<String, UserStatus> listUsers() {
-        return this.userStatus;
+        return new HashMap<>(this.userStatus);
     }
 
-    public Map<String, UserStatus> listOnlineUsers() {
-        Map<String, UserStatus> toReturn = new HashMap<>(this.userStatus);
-        Set<String> keySet = toReturn.keySet();
+    public List<String> listOnlineUsers() {
+        Map<String, UserStatus> temp = new HashMap<>(this.userStatus);
+        List<String> toReturn = new ArrayList<>();
+        Set<String> keySet = temp.keySet();
         for (String key : keySet) {
-            if (toReturn.get(key) == UserStatus.OFFLINE) {
-                toReturn.remove(key);
+            if (temp.get(key) == UserStatus.ONLINE) {
+                toReturn.add(key);
             }
         }
         return toReturn;

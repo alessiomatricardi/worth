@@ -1,6 +1,5 @@
 package worth.server;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import worth.data.*;
@@ -10,8 +9,7 @@ import worth.protocol.ResponseMessage;
 import worth.server.rmi.RMICallbackServiceImpl;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.charset.StandardCharsets;
@@ -22,10 +20,11 @@ import java.util.*;
  * Created by alessiomatricardi on 03/01/21
  */
 public class SelectionTask implements Runnable {
-    private static final int ALLOCATION_SIZE = 1024; // size (in byte) per allocazione di un ByteBuffer
-    private final TCPOperations data;       // dati dell'applicazione
-    private final ObjectMapper mapper;      // mapper utilizzato per serializzazione/deserializzazione Jackson
-    RMICallbackServiceImpl callbackService; // servizio di callback
+    private static final int MESSAGE_PORT = 6789;       // porta utilizzata per inviare messaggi multicast
+    private static final int ALLOCATION_SIZE = 1024;    // size (in byte) per allocazione di un ByteBuffer
+    private final TCPOperations data;                   // dati dell'applicazione
+    private final ObjectMapper mapper;                  // mapper utilizzato per serializzazione/deserializzazione Jackson
+    private final RMICallbackServiceImpl callbackService;             // servizio di callback
 
     public SelectionTask(TCPOperations data, RMICallbackServiceImpl callbackService) {
         this.data = data;
@@ -380,6 +379,19 @@ public class SelectionTask implements Runnable {
                                 } catch (OperationNotAllowedException e) {
                                     responseCode = CommunicationProtocol.MOVE_CARD_NOT_ALLOWED;
                                 }
+
+                                // andato tutto bene, il server avvisa tutti gli utenti nella chat di progetto todo
+                                /*
+                                try {
+                                    String chatAddress = data.getProjectChatAddress(projectName);
+                                    InetAddress group = InetAddress.getByName(chatAddress);
+                                    MulticastSocket socket = new MulticastSocket(MESSAGE_PORT);
+                                    socket.joinGroup(group,);
+                                    //socket.joinGroup(); todo
+                                } catch (ProjectNotExistsException e) {
+                                    e.printStackTrace();
+                                }*/
+
                                 break;
                             }
                             case CommunicationProtocol.CARD_HISTORY_CMD: {

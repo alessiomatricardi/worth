@@ -5,9 +5,11 @@ import java.awt.*;
 
 /**
  * Created by alessiomatricardi on 08/01/21
+ *
+ * Pannello home
  */
 public class HomePanel extends JPanel {
-    private JLabel usernameLabel;
+    private static final String LOGO_PATHNAME = "./resources/logo.png";
     private JTextField projectNameField;
     private JButton createProjectButton;
 
@@ -19,15 +21,14 @@ public class HomePanel extends JPanel {
         JPanel firstPanel = new JPanel(new GridLayout(2,1));
 
         JPanel welcomePanel = new JPanel(new FlowLayout());
-        usernameLabel = new JLabel("Welcome!");
-        Font font = usernameLabel.getFont();
-        int fontSize = font.getSize();
-        usernameLabel.setFont(new Font(font.getName(), Font.PLAIN, fontSize * 5));
-        welcomePanel.add(usernameLabel);
+        JLabel picLabel = new JLabel(new ImageIcon(LOGO_PATHNAME));
+        welcomePanel.add(picLabel);
         firstPanel.add(welcomePanel);
 
         JPanel infoPanel = new JPanel(new FlowLayout());
         JLabel infoLabel = new JLabel("Create new Project");
+        Font font = infoLabel.getFont();
+        int fontSize = font.getSize();
         infoLabel.setFont(new Font(font.getName(), Font.PLAIN, fontSize * 4));
         infoPanel.add(infoLabel);
         firstPanel.add(infoPanel);
@@ -51,10 +52,6 @@ public class HomePanel extends JPanel {
 
         this.add(firstPanel);
         this.add(secondPanel);
-    }
-
-    public void setUsernameLabel(String username) {
-        this.usernameLabel.setText("Welcome " + username + "!");
     }
 
     public JTextField getProjectNameField() {

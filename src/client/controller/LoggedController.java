@@ -6,11 +6,19 @@ import worth.client.ui.WorthFrame;
 import worth.client.ui.loggedPanels.HomePanel;
 import worth.client.ui.loggedPanels.ProjectDetailPanel;
 import worth.client.ui.loggedPanels.ShowProjectsPanel;
+import worth.client.ui.loggedPanels.ShowUsersPanel;
+import worth.data.Project;
+import worth.data.UserStatus;
 import worth.exceptions.*;
 import worth.utils.UIMessages;
 import worth.utils.Utils;
 
 import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by alessiomatricardi on 05/01/21
@@ -31,7 +39,7 @@ public class LoggedController {
         // azioni possibili in LoggedUI
         this.view.getHomeButton().addActionListener(e -> this.showHome());
 
-        this.view.getUserListButton().addActionListener(e -> this.showUsers());
+        this.view.getUserListButton().addActionListener(e -> this.showUsers(false));
 
         this.view.getShowProjectsButton().addActionListener(e -> this.showProjects());
 
@@ -46,6 +54,17 @@ public class LoggedController {
         HomePanel homePanel = this.view.getHomePanel();
         homePanel.getCreateProjectButton().addActionListener(e -> this.createProject());
 
+        ShowUsersPanel showUsersPanel = this.view.getShowUsersPanel();
+        showUsersPanel.getOnlineToggle().addActionListener(e -> {
+            if (showUsersPanel.getOnlineToggle().getText().equals(ShowUsersPanel.SHOW_ALL_USERS_TEXT)) {
+                this.showUsers(false);
+                showUsersPanel.getOnlineToggle().setText(ShowUsersPanel.SHOW_ONLY_ON_TEXT);
+            } else {
+                this.showUsers(true);
+                showUsersPanel.getOnlineToggle().setText(ShowUsersPanel.SHOW_ALL_USERS_TEXT);
+            }
+        });
+
         ShowProjectsPanel showProjectsPanel = this.view.getShowProjectsPanel();
 
         ProjectDetailPanel projectDetailPanel = this.view.getProjectDetailPanel();
@@ -53,20 +72,59 @@ public class LoggedController {
     }
 
     private void showHome() {
-        String username = this.model.getUsername();
-        this.view.getHomePanel().setUsernameLabel(username);
-        this.updateUI(this.view.getHomePanel());
         this.showPanel(LoggedUI.HOME_PANEL);
     }
 
-    private void showUsers() {
-        // recupera utenti todo
+    private void showUsers(boolean onlyOnlineUsers) {
+        List<JLabel> labels = new ArrayList<>();
+        if (onlyOnlineUsers) {
+            List<String> users = this.model.listOnlineUsers();
+            for (String user : users) {
+                String text = user + " : ONLINE";
+                labels.add(new JLabel(text));
+            }
+        } else {
+            Map<String, UserStatus> userStatus= this.model.listUsers();
+            Set<String> users = userStatus.keySet();
+            for (String user : users) {
+                String text = user + " : " + userStatus.get(user).name();
+                labels.add(new JLabel(text));
+            }
+        }
+        ShowUsersPanel showUsersPanel = this.view.getShowUsersPanel();
+        showUsersPanel.setUI(labels);
+        // aggiorno UI
+        this.updateUI(showUsersPanel);
         this.showPanel(LoggedUI.USERS_PANEL);
     }
 
     private void showProjects() {
-        // recupera progetti todo
-        this.showPanel(LoggedUI.PROJECTS_PANEL);
+        try {
+            List<Project> projects = this.model.listProjects();
+            // creo buttons
+            List<JButton> buttons = new ArrayList<>();
+            for (Project project : projects) {
+                JButton button = new JButton(project.getName());
+                // aggiungo azione
+                button.addActionListener(e -> this.showProjectDetails(button.getText()));
+                // aggiungo alla lista
+                buttons.add(button);
+            }
+            // aggiungo elementi
+            ShowProjectsPanel showProjectsPanel = this.view.getShowProjectsPanel();
+            showProjectsPanel.setUI(buttons);
+            // aggiorno UI
+            this.updateUI(showProjectsPanel);
+            this.showPanel(LoggedUI.PROJECTS_PANEL);
+        } catch (CommunicationException e) {
+            Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
+        } catch (UserNotExistsException e) {
+            Utils.showErrorMessageDialog(UIMessages.USERNAME_NOT_EXISTS);
+        }
+    }
+
+    private void showProjectDetails(String projectName) {
+
     }
 
     private void createProject() {

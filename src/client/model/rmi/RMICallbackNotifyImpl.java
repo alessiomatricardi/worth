@@ -12,7 +12,7 @@ import java.util.Map;
  * Implementazione del servizio di callback lato client
  */
 public class RMICallbackNotifyImpl extends UnicastRemoteObject implements RMICallbackNotify {
-    private Map<String, UserStatus> userStatus;
+    private final Map<String, UserStatus> userStatus;
 
     public RMICallbackNotifyImpl(Map<String, UserStatus> userStatus) throws RemoteException {
         super();
