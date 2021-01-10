@@ -37,6 +37,7 @@ public class ClientModel {
     private final ObjectMapper mapper;                // mapper per serializzazione/deserializzazione
     private Map<String, UserStatus> userStatus; // lista degli stati degli utenti
     private RMICallbackNotify callbackNotify;   // gestione callback
+    private Map<String, String> projectChatAddresses; // indirizzi multicast dei progetti
 
     // predispone la connessione del client con il server
     public ClientModel() throws IOException {
@@ -58,6 +59,7 @@ public class ClientModel {
 
         this.userStatus = null; // non è ancora il momento di inizializzarlo
         this.callbackNotify = null; // non è ancora il momento di inizializzarlo
+        this.projectChatAddresses = new HashMap<>();
         this.isLogged = false;
         this.username = "";
     }
@@ -118,7 +120,7 @@ public class ClientModel {
             // deve rimanere synchronized
             this.userStatus = Collections.synchronizedMap(this.userStatus);
 
-            // istanza callback
+            // istanzia callback
             this.callbackNotify = new RMICallbackNotifyImpl(this.userStatus);
 
             // richiedo registrazione a servizio di callback
@@ -403,6 +405,14 @@ public class ClientModel {
     }
 
     public String readChat(String projectName) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
+        // se lo ho già, non devo chiedere al server l'indirizzo multicast
+        String chatAddress;
+        chatAddress = this.projectChatAddresses.get(projectName);
+        if (chatAddress != null) {
+            // dico al controller che c'è già un thread in ascolto
+            return null;
+        }
+
         // prepara messaggio da inviare
         String messageToSend = this.encodeMessageArguments(
                 CommunicationProtocol.READ_CHAT_CMD,
@@ -419,13 +429,15 @@ public class ClientModel {
         }
 
         try {
-            String chatAddress = this.mapper.readValue(
+            chatAddress = this.mapper.readValue(
                     response.getResponseBody(),
                     new TypeReference<String>() {}
             );
 
-            // todo something
+            // salvo la corrispondenza progetto-indirizzo
+            this.projectChatAddresses.put(projectName, chatAddress);
 
+            // invio al controller l'indirizzo multicast su cui iniziare ad ascoltare
             return chatAddress;
         } catch (IOException e) {
             e.printStackTrace();

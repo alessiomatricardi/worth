@@ -16,7 +16,7 @@ public abstract class CommunicationProtocol {
     public static final int REGISTRY_PORT = 6789;
 
     // Porta utilizzata nelle chat multicast
-    public static final int UDP_CHAT_PORT = 7890;
+    public static final int UDP_CHAT_PORT = 50000;
 
     // Nome del servizio di registrazione offerto da RMI
     public static final String REGISTRATION_SERVICE_NAME =
@@ -29,8 +29,8 @@ public abstract class CommunicationProtocol {
     // Lunghezza minima della password
     public static final int MIN_PASSWORD_LEN = 8;
 
-    // REGEX username, solo a-z, A-Z, 0-9, . - _ consentiti
-    public static final String STRING_REGEX = "^[a-zA-Z0-9._-]+$";
+    // REGEX username, solo a-z, A-Z, 0-9, _ consentiti
+    public static final String STRING_REGEX = "^[a-zA-Z0-9_]+$";
 
     // carattere separatore
     public static final String SEPARATOR = " ";

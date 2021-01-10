@@ -29,7 +29,7 @@ public class UIMessages {
     // messaggio "caratteri non consentiti"
     public static final String CHARACTERS_NOT_ALLOWED =
             "We're sorry, but this field contains some not allowed characters.\n" +
-                    "It should contain only alphanumeric characters, . - and _";
+                    "It should contain only alphanumeric characters and _";
 
     //
     public static final String EMPTY_FIELD = "Some fields seems to be empty or blank.\n";
