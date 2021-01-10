@@ -3,9 +3,7 @@ package worth.server;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import worth.data.Card;
-import worth.data.CardStatus;
-import worth.data.UserStatus;
+import worth.data.*;
 import worth.exceptions.*;
 import worth.protocol.CommunicationProtocol;
 import worth.protocol.ResponseMessage;
@@ -148,7 +146,7 @@ public class SelectionTask implements Runnable {
                         String responseBody = null;
 
                         // in base al comando, ci saranno diversi comportamenti
-                        switch (command) { // todo manca qualcosa
+                        switch (command) {
                             // todo server scrive su chat multicast
                             case CommunicationProtocol.LOGIN_CMD: {
                                 // controllo numero di parametri
@@ -196,7 +194,17 @@ public class SelectionTask implements Runnable {
                                 break;
                             }
                             case CommunicationProtocol.LISTPROJECTS_CMD: {
-                                break; // todo
+                                // il nome utente viene prelevato direttamente dal server
+                                String username = attachment.getUsername();
+                                if (username != null) {
+                                    try {
+                                        List<Project> projects = data.listProjects(username);
+                                        responseBody = this.mapper.writeValueAsString(projects);
+                                    } catch (UserNotExistsException e) {
+                                        responseCode = CommunicationProtocol.USER_NOT_EXISTS;
+                                    }
+                                }
+                                break;
                             }
                             case CommunicationProtocol.CREATEPROJECT_CMD: {
                                 // controllo numero di parametri
@@ -248,7 +256,26 @@ public class SelectionTask implements Runnable {
                                 break;
                             }
                             case CommunicationProtocol.SHOW_MEMBERS_CMD: {
-                                break; // todo
+                                // controllo numero di parametri
+                                if (arguments.size() != 1) {
+                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
+                                    break;
+                                }
+
+                                // recupero l'utente che ha fatto la richiesta
+                                String username = attachment.getUsername();
+
+                                String projectName = arguments.get(0);
+
+                                try {
+                                    List<String> members = data.showMembers(projectName, username);
+                                    responseBody = this.mapper.writeValueAsString(members);
+                                } catch (ProjectNotExistsException e) {
+                                    responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
+                                } catch (UnauthorizedUserException e) {
+                                    responseCode = CommunicationProtocol.UNAUTHORIZED;
+                                }
+                                break;
                             }
                             case CommunicationProtocol.SHOW_CARDS_CMD: {
                                 // controllo numero di parametri
@@ -271,11 +298,33 @@ public class SelectionTask implements Runnable {
                                 break;
                             }
                             case CommunicationProtocol.SHOW_CARD_CMD: {
-                                break; // todo
+                                // controllo numero di parametri
+                                if (arguments.size() != 2) {
+                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
+                                    break;
+                                }
+
+                                // recupero l'utente che ha fatto la richiesta
+                                String username = attachment.getUsername();
+
+                                String projectName = arguments.get(0);
+                                String cardName = arguments.get(1);
+
+                                try {
+                                    Card card = data.showCard(projectName, cardName, username);
+                                    responseBody = this.mapper.writeValueAsString(card);
+                                } catch (ProjectNotExistsException e) {
+                                    responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
+                                } catch (UnauthorizedUserException e) {
+                                    responseCode = CommunicationProtocol.UNAUTHORIZED;
+                                } catch (CardNotExistsException e) {
+                                    responseCode = CommunicationProtocol.CARD_NOT_EXISTS;
+                                }
+                                break;
                             }
                             case CommunicationProtocol.ADD_CARD_CMD: {
                                 // controllo numero di parametri
-                                if (arguments.size() != 1) {
+                                if (arguments.size() != 3) {
                                     responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
                                     break;
                                 }
@@ -307,14 +356,18 @@ public class SelectionTask implements Runnable {
 
                                 String projectName = arguments.get(0);
                                 String cardName = arguments.get(1);
-                                CardStatus from = this.mapper.readValue(
-                                        arguments.get(2),
-                                        new TypeReference<CardStatus>() {}
+                                CardStatus from = CardStatus.retriveFromString(
+                                        arguments.get(2)
                                 );
-                                CardStatus to = this.mapper.readValue(
-                                        arguments.get(3),
-                                        new TypeReference<CardStatus>() {}
-                                );;
+                                CardStatus to = CardStatus.retriveFromString(
+                                        arguments.get(3)
+                                );
+
+                                // controllo che from e to non siano nulli
+                                if (from == null || to == null) {
+                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
+                                    break;
+                                }
 
                                 try {
                                     data.moveCard(projectName, cardName, from, to, username);
@@ -330,10 +383,51 @@ public class SelectionTask implements Runnable {
                                 break;
                             }
                             case CommunicationProtocol.CARD_HISTORY_CMD: {
-                                break; // todo
+                                // controllo numero di parametri
+                                if (arguments.size() != 2) {
+                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
+                                    break;
+                                }
+
+                                // recupero l'utente che ha fatto la richiesta
+                                String username = attachment.getUsername();
+
+                                String projectName = arguments.get(0);
+                                String cardName = arguments.get(1);
+
+                                try {
+                                    List<Movement> cardHistory = data.getCardHistory(projectName, cardName, username);
+                                    responseBody = this.mapper.writeValueAsString(cardHistory);
+                                } catch (ProjectNotExistsException e) {
+                                    responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
+                                } catch (UnauthorizedUserException e) {
+                                    responseCode = CommunicationProtocol.UNAUTHORIZED;
+                                } catch (CardNotExistsException e) {
+                                    responseCode = CommunicationProtocol.CARD_NOT_EXISTS;
+                                }
+                                break;
                             }
                             case CommunicationProtocol.READ_CHAT_CMD: {
-                                break; // todo
+                                // controllo numero di parametri
+                                if (arguments.size() != 1) {
+                                    responseCode = CommunicationProtocol.COMMUNICATION_ERROR;
+                                    break;
+                                }
+
+                                // recupero l'utente che ha fatto la richiesta
+                                String username = attachment.getUsername();
+
+                                String projectName = arguments.get(0);
+
+                                try {
+                                    String chatAddress = data.readChat(projectName, username);
+                                    responseBody = this.mapper.writeValueAsString(chatAddress);
+                                } catch (ProjectNotExistsException e) {
+                                    responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
+                                } catch (UnauthorizedUserException e) {
+                                    responseCode = CommunicationProtocol.UNAUTHORIZED;
+                                }
+                                break;
                             }
                             case CommunicationProtocol.CANCELPROJECT_CMD: {
                                 // controllo numero di parametri

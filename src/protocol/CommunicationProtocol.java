@@ -15,6 +15,9 @@ public abstract class CommunicationProtocol {
     // Porta del registry per recupero servizio di registrazione
     public static final int REGISTRY_PORT = 6789;
 
+    // Porta utilizzata nelle chat multicast
+    public static final int UDP_CHAT_PORT = 7890;
+
     // Nome del servizio di registrazione offerto da RMI
     public static final String REGISTRATION_SERVICE_NAME =
             "rmi://" + SERVER_IP_ADDRESS +":" + REGISTRY_PORT + "/RegistrationService";

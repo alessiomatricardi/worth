@@ -33,10 +33,10 @@ public class ClientModel {
     private static final int ALLOCATION_SIZE = 512*512; // spazio di allocazione del buffer
     private boolean isLogged;                   // l'utente è loggato?
     private String username;                    // per tenere traccia dello username dell'utente
-    private SocketChannel socket;               // socket per instaurazione connessione
-    private ObjectMapper mapper;                // mapper per serializzazione/deserializzazione
+    private final SocketChannel socket;               // socket per instaurazione connessione
+    private final ObjectMapper mapper;                // mapper per serializzazione/deserializzazione
     private Map<String, UserStatus> userStatus; // lista degli stati degli utenti
-    private RMICallbackNotify callbackNotify;   // gestione callback
+    private final RMICallbackNotify callbackNotify;   // gestione callback
 
     // predispone la connessione del client con il server
     public ClientModel() throws IOException {
@@ -53,6 +53,8 @@ public class ClientModel {
         this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
         // formattazione data
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+        this.mapper.setDateFormat(dateFormat);
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         this.userStatus = Collections.synchronizedMap(new HashMap<>());
         this.callbackNotify = new RMICallbackNotifyImpl(this.userStatus);
@@ -166,8 +168,31 @@ public class ClientModel {
         return toReturn;
     }
 
-    public List<Project> listProjects() {
-        return null; // todo
+    public List<Project> listProjects() throws CommunicationException, UserNotExistsException {
+        // prepara messaggio da inviare
+        String messageToSend = this.encodeMessageArguments(
+                CommunicationProtocol.LISTPROJECTS_CMD
+        );
+
+        ResponseMessage response = null;
+        response = this.sendTCPRequest(messageToSend);
+
+        if (response.getStatusCode() == CommunicationProtocol.USER_NOT_EXISTS) {
+            throw new UserNotExistsException();
+        }
+
+        try {
+            List<Project> projectList = this.mapper.readValue(
+                    response.getResponseBody(),
+                    new TypeReference<List<Project>>() {
+                    }
+            );
+
+            return projectList;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new CommunicationException();
+        }
     }
 
     public void createProject(String projectName)
@@ -189,44 +214,238 @@ public class ClientModel {
         }
     }
 
-    public void addMember(String projectName, String username) {
-        // todo
+    public void addMember(String projectName, String username) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException, UserAlreadyPresentException, UserNotExistsException {
+        // prepara messaggio da inviare
+        String messageToSend = this.encodeMessageArguments(
+                CommunicationProtocol.ADD_MEMBER_CMD,
+                projectName,
+                username
+        );
+
+        ResponseMessage response = null;
+        response = this.sendTCPRequest(messageToSend);
+
+        switch (response.getStatusCode()) {
+            case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
+            case CommunicationProtocol.PROJECT_NOT_EXISTS -> throw new ProjectNotExistsException();
+            case CommunicationProtocol.UNAUTHORIZED -> throw new UnauthorizedUserException();
+            case CommunicationProtocol.ADD_MEMBER_ALREADYPRESENT -> throw new UserAlreadyPresentException();
+            case CommunicationProtocol.USER_NOT_EXISTS -> throw new UserNotExistsException();
+        }
     }
 
-    public List<String> showMembers(String projectName) {
-        return null; // todo
+    public List<String> showMembers(String projectName) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
+        // prepara messaggio da inviare
+        String messageToSend = this.encodeMessageArguments(
+                CommunicationProtocol.SHOW_MEMBERS_CMD,
+                projectName
+        );
+
+        ResponseMessage response = null;
+        response = this.sendTCPRequest(messageToSend);
+
+        switch (response.getStatusCode()) {
+            case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
+            case CommunicationProtocol.PROJECT_NOT_EXISTS -> throw new ProjectNotExistsException();
+            case CommunicationProtocol.UNAUTHORIZED -> throw new UnauthorizedUserException();
+        }
+
+        try {
+            List<String> members = this.mapper.readValue(
+                    response.getResponseBody(),
+                    new TypeReference<List<String>>() {}
+            );
+
+            return members;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new CommunicationException();
+        }
     }
 
-    public List<String> showCards(String projectName) {
-        return null;        // todo
+    public List<String> showCards(String projectName) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
+        // prepara messaggio da inviare
+        String messageToSend = this.encodeMessageArguments(
+                CommunicationProtocol.SHOW_CARDS_CMD,
+                projectName
+        );
+
+        ResponseMessage response = null;
+        response = this.sendTCPRequest(messageToSend);
+
+        switch (response.getStatusCode()) {
+            case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
+            case CommunicationProtocol.PROJECT_NOT_EXISTS -> throw new ProjectNotExistsException();
+            case CommunicationProtocol.UNAUTHORIZED -> throw new UnauthorizedUserException();
+        }
+
+        try {
+            List<String> cards = this.mapper.readValue(
+                    response.getResponseBody(),
+                    new TypeReference<List<String>>() {}
+            );
+
+            return cards;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new CommunicationException();
+        }
     }
 
-    public Card showCard(String projectName, String cardName) {
-        return null;        // todo
+    public Card showCard(String projectName, String cardName) throws CommunicationException, ProjectNotExistsException, CardNotExistsException, UnauthorizedUserException {
+        // prepara messaggio da inviare
+        String messageToSend = this.encodeMessageArguments(
+                CommunicationProtocol.SHOW_CARD_CMD,
+                projectName,
+                cardName
+        );
+
+        ResponseMessage response = null;
+        response = this.sendTCPRequest(messageToSend);
+
+        switch (response.getStatusCode()) {
+            case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
+            case CommunicationProtocol.PROJECT_NOT_EXISTS -> throw new ProjectNotExistsException();
+            case CommunicationProtocol.CARD_NOT_EXISTS -> throw new CardNotExistsException();
+            case CommunicationProtocol.UNAUTHORIZED -> throw new UnauthorizedUserException();
+        }
+
+        try {
+            Card card = this.mapper.readValue(
+                    response.getResponseBody(),
+                    new TypeReference<Card>() {}
+            );
+
+            return card;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new CommunicationException();
+        }
     }
 
-    public void addCard(String projectName, String cardName, String descrizione) {
-        // todo
+    public void addCard(String projectName, String cardName, String description) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException, CardAlreadyExistsException {
+        // prepara messaggio da inviare
+        String messageToSend = this.encodeMessageArguments(
+                CommunicationProtocol.ADD_CARD_CMD,
+                projectName,
+                cardName,
+                description
+        );
+
+        ResponseMessage response = null;
+        response = this.sendTCPRequest(messageToSend);
+
+        switch (response.getStatusCode()) {
+            case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
+            case CommunicationProtocol.PROJECT_NOT_EXISTS -> throw new ProjectNotExistsException();
+            case CommunicationProtocol.UNAUTHORIZED -> throw new UnauthorizedUserException();
+            case CommunicationProtocol.ADD_CARD_ALREADYEXISTS -> throw new CardAlreadyExistsException();
+        }
     }
 
-    public void moveCard(String projectName, String cardName, CardStatus from, CardStatus to) {
-        // todo
+    public void moveCard(String projectName, String cardName, CardStatus from, CardStatus to) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException, OperationNotAllowedException, CardNotExistsException {
+        // prepara messaggio da inviare
+        String messageToSend = this.encodeMessageArguments(
+                CommunicationProtocol.MOVE_CARD_CMD,
+                projectName,
+                cardName,
+                from.name(),
+                to.name()
+        );
+
+        ResponseMessage response = null;
+        response = this.sendTCPRequest(messageToSend);
+
+        switch (response.getStatusCode()) {
+            case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
+            case CommunicationProtocol.PROJECT_NOT_EXISTS -> throw new ProjectNotExistsException();
+            case CommunicationProtocol.UNAUTHORIZED -> throw new UnauthorizedUserException();
+            case CommunicationProtocol.CARD_NOT_EXISTS -> throw new CardNotExistsException();
+            case CommunicationProtocol.MOVE_CARD_NOT_ALLOWED -> throw new OperationNotAllowedException();
+        }
     }
 
-    public List<Movement> getCardHistory(String projectName, String cardName) {
-        return null;        // todo
+    public List<Movement> getCardHistory(String projectName, String cardName) throws CommunicationException, CardNotExistsException, UnauthorizedUserException, ProjectNotExistsException {
+        // prepara messaggio da inviare
+        String messageToSend = this.encodeMessageArguments(
+                CommunicationProtocol.CARD_HISTORY_CMD,
+                projectName,
+                cardName
+        );
+
+        ResponseMessage response = null;
+        response = this.sendTCPRequest(messageToSend);
+
+        switch (response.getStatusCode()) {
+            case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
+            case CommunicationProtocol.PROJECT_NOT_EXISTS -> throw new ProjectNotExistsException();
+            case CommunicationProtocol.UNAUTHORIZED -> throw new UnauthorizedUserException();
+            case CommunicationProtocol.CARD_NOT_EXISTS -> throw new CardNotExistsException();
+        }
+
+        try {
+            List<Movement> movements = this.mapper.readValue(
+                    response.getResponseBody(),
+                    new TypeReference<List<Movement>>() {}
+            );
+
+            return movements;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new CommunicationException();
+        }
     }
 
-    public void readChat(String projectName) {
-        // todo
+    public String readChat(String projectName) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
+        // prepara messaggio da inviare
+        String messageToSend = this.encodeMessageArguments(
+                CommunicationProtocol.READ_CHAT_CMD,
+                projectName
+        );
+
+        ResponseMessage response = null;
+        response = this.sendTCPRequest(messageToSend);
+
+        switch (response.getStatusCode()) {
+            case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
+            case CommunicationProtocol.PROJECT_NOT_EXISTS -> throw new ProjectNotExistsException();
+            case CommunicationProtocol.UNAUTHORIZED -> throw new UnauthorizedUserException();
+        }
+
+        try {
+            String chatAddress = this.mapper.readValue(
+                    response.getResponseBody(),
+                    new TypeReference<String>() {}
+            );
+
+            // todo something
+
+            return chatAddress;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new CommunicationException();
+        }
     }
 
     public void sendChatMsg(String projectName, String messaggio) {
         // todo
     }
 
-    public void cancelProject(String projectName) {
-        // todo
+    public void cancelProject(String projectName) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
+        // prepara messaggio da inviare
+        String messageToSend = this.encodeMessageArguments(
+                CommunicationProtocol.SHOW_CARDS_CMD,
+                projectName
+        );
+
+        ResponseMessage response = null;
+        response = this.sendTCPRequest(messageToSend);
+
+        switch (response.getStatusCode()) {
+            case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
+            case CommunicationProtocol.PROJECT_NOT_EXISTS -> throw new ProjectNotExistsException();
+            case CommunicationProtocol.UNAUTHORIZED -> throw new UnauthorizedUserException();
+        }
     }
 
     public String getUsername() {
