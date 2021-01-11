@@ -498,7 +498,7 @@ public class SelectionTask implements Runnable {
                                 } catch (UnauthorizedUserException e) {
                                     responseCode = CommunicationProtocol.UNAUTHORIZED;
                                 } catch (ProjectNotCancelableException e) {
-                                    responseCode = CommunicationProtocol.CANCELPROJECT_NOTCLOSEABLE;
+                                    responseCode = CommunicationProtocol.CANCELPROJECT_NOTCANCELABLE;
                                 }
                                 break;
                             }

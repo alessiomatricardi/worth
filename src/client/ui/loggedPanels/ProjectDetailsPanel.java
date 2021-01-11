@@ -1,7 +1,7 @@
 package worth.client.ui.loggedPanels;
 
 import worth.client.ui.HostsCardsContainer;
-import worth.client.ui.loggedPanels.projectPanels.CardDetailPanel;
+import worth.client.ui.loggedPanels.projectPanels.CardDetailsPanel;
 import worth.client.ui.loggedPanels.projectPanels.ChatPanel;
 import worth.client.ui.loggedPanels.projectPanels.ProjectCardsPanel;
 import worth.client.ui.loggedPanels.projectPanels.ProjectMembersPanel;
@@ -40,7 +40,7 @@ public class ProjectDetailsPanel extends JPanel implements HostsCardsContainer {
     // panels gestiti in containerPanel
     private ProjectMembersPanel projectMembersPanel;
     private ProjectCardsPanel projectCardsPanel;
-    private CardDetailPanel cardDetailPanel;
+    private CardDetailsPanel cardDetailsPanel;
     private ChatPanel chatPanel;
 
     public ProjectDetailsPanel() {
@@ -75,11 +75,11 @@ public class ProjectDetailsPanel extends JPanel implements HostsCardsContainer {
         // aggiungo panels al container
         projectMembersPanel = new ProjectMembersPanel();
         projectCardsPanel = new ProjectCardsPanel();
-        cardDetailPanel = new CardDetailPanel();
+        cardDetailsPanel = new CardDetailsPanel();
         chatPanel = new ChatPanel();
         containerPanel.add(projectMembersPanel, MEMBERS_PANEL);
         containerPanel.add(projectCardsPanel, CARDS_PANEL);
-        containerPanel.add(cardDetailPanel, CARD_DETAILS_PANEL);
+        containerPanel.add(cardDetailsPanel, CARD_DETAILS_PANEL);
         containerPanel.add(chatPanel, CHAT_PANEL);
 
         // aggiungo pannelli principali

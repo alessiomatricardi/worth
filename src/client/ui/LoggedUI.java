@@ -26,7 +26,7 @@ public class LoggedUI extends JPanel implements HostsCardsContainer {
     // buttons
     private final JButton homeButton;
     private final JButton userListButton;
-    private final JButton showProjectsListButton;
+    private final JButton projectsListButton;
     private final JButton logoutButton;
 
     // gestore layout
@@ -50,11 +50,11 @@ public class LoggedUI extends JPanel implements HostsCardsContainer {
         // aggiungo buttons a buttonsPanel
         homeButton = new JButton("Home");
         userListButton = new JButton("Show users");
-        showProjectsListButton = new JButton("Show my projects");
+        projectsListButton = new JButton("Show my projects");
         logoutButton = new JButton("Logout");
         buttonsPanel.add(homeButton);
         buttonsPanel.add(userListButton);
-        buttonsPanel.add(showProjectsListButton);
+        buttonsPanel.add(projectsListButton);
         buttonsPanel.add(logoutButton);
 
         // containerPanel ha layout CardLayout
@@ -110,8 +110,8 @@ public class LoggedUI extends JPanel implements HostsCardsContainer {
         return userListButton;
     }
 
-    public JButton getShowProjectsListButton() {
-        return showProjectsListButton;
+    public JButton getProjectsListButton() {
+        return projectsListButton;
     }
 
     public JButton getLogoutButton() {

@@ -43,7 +43,7 @@ public class LoggedController {
 
         this.view.getUserListButton().addActionListener(e -> this.showUsers(false));
 
-        this.view.getShowProjectsListButton().addActionListener(e -> this.showProjectsList());
+        this.view.getProjectsListButton().addActionListener(e -> this.showProjectsList());
 
         this.view.getLogoutButton().addActionListener(e -> {
             int result = Utils.showQuestionMessageDialog(UIMessages.LOGOUT_MESSAGE);

@@ -487,10 +487,11 @@ public class ClientModel {
         multicastSocket.send(packet);
     }
 
-    public void cancelProject(String projectName) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
+    public void cancelProject(String projectName)
+            throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException, ProjectNotCancelableException {
         // prepara messaggio da inviare
         String messageToSend = this.encodeMessageArguments(
-                CommunicationProtocol.SHOW_CARDS_CMD,
+                CommunicationProtocol.CANCELPROJECT_CMD,
                 projectName
         );
 
@@ -501,6 +502,7 @@ public class ClientModel {
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
             case CommunicationProtocol.PROJECT_NOT_EXISTS -> throw new ProjectNotExistsException();
             case CommunicationProtocol.UNAUTHORIZED -> throw new UnauthorizedUserException();
+            case CommunicationProtocol.CANCELPROJECT_NOTCANCELABLE -> throw new ProjectNotCancelableException();
         }
     }
 

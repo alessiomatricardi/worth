@@ -15,7 +15,7 @@ public abstract class CommunicationProtocol {
     // Porta del registry per recupero servizio di registrazione
     public static final int REGISTRY_PORT = 6789;
 
-    // Porta utilizzata nelle chat multicast
+    // Porta utilizzata nelle chat multicast per inviare e ricevere messaggi
     public static final int UDP_CHAT_PORT = 50000;
 
     // quantità massima di bytes trasportabili in un messaggio UDP
@@ -46,7 +46,7 @@ public abstract class CommunicationProtocol {
     public static final String SEPARATOR = " ";
 
     /**
-    * COMANDI E CODICI DI ERRORI DURANTE LA COMUNICAZIONE TCP
+    * COMANDI E CODICI DI RISPOSTA DURANTE LA COMUNICAZIONE TCP
     */
 
     // codice non identificato, utilizzato come valore di base prima di calcolare il vero codice
@@ -104,6 +104,6 @@ public abstract class CommunicationProtocol {
     public static final String READ_CHAT_CMD = "read_chat";
 
     public static final String CANCELPROJECT_CMD = "cancel_project";
-    public static final int CANCELPROJECT_NOTCLOSEABLE = 1;
+    public static final int CANCELPROJECT_NOTCANCELABLE = 1;
 
 }
