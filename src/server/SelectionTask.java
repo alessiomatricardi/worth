@@ -6,6 +6,7 @@ import worth.data.*;
 import worth.exceptions.*;
 import worth.protocol.CommunicationProtocol;
 import worth.protocol.ResponseMessage;
+import worth.protocol.UDPMessage;
 import worth.server.rmi.RMICallbackServiceImpl;
 
 import java.io.IOException;
@@ -20,7 +21,6 @@ import java.util.*;
  * Created by alessiomatricardi on 03/01/21
  */
 public class SelectionTask implements Runnable {
-    private static final int MESSAGE_PORT = 6789;       // porta utilizzata per inviare messaggi multicast
     private static final int ALLOCATION_SIZE = 1024;    // size (in byte) per allocazione di un ByteBuffer
     private final TCPOperations data;                   // dati dell'applicazione
     private final ObjectMapper mapper;                  // mapper utilizzato per serializzazione/deserializzazione Jackson
@@ -370,6 +370,33 @@ public class SelectionTask implements Runnable {
 
                                 try {
                                     data.moveCard(projectName, cardName, from, to, username);
+
+                                    // andato tutto bene
+                                    // il server avvisa tutti gli utenti nella chat di progetto
+                                    try {
+                                        String chatAddress = data.getProjectChatAddress(projectName);
+                                        InetAddress group = InetAddress.getByName(chatAddress);
+                                        MulticastSocket multicastSocket = new MulticastSocket(CommunicationProtocol.UDP_CHAT_PORT);
+
+                                        UDPMessage udpMessage = new UDPMessage(
+                                                CommunicationProtocol.SYSTEM_NAME,
+                                                username + " moved " + cardName +
+                                                        " from " + from.name() + " to " + to.name(),
+                                                true
+                                        );
+                                        byte[] byteMessage = this.mapper.writeValueAsBytes(udpMessage);
+                                        DatagramPacket packet = new DatagramPacket(
+                                                byteMessage,
+                                                byteMessage.length,
+                                                group,
+                                                CommunicationProtocol.UDP_CHAT_PORT
+                                        );
+                                        multicastSocket.send(packet);
+
+                                    } catch (ProjectNotExistsException e) {
+                                        e.printStackTrace();
+                                    }
+
                                 } catch (ProjectNotExistsException e) {
                                     responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
                                 } catch (UnauthorizedUserException e) {
@@ -379,19 +406,6 @@ public class SelectionTask implements Runnable {
                                 } catch (OperationNotAllowedException e) {
                                     responseCode = CommunicationProtocol.MOVE_CARD_NOT_ALLOWED;
                                 }
-
-                                // andato tutto bene, il server avvisa tutti gli utenti nella chat di progetto todo
-                                /*
-                                try {
-                                    String chatAddress = data.getProjectChatAddress(projectName);
-                                    InetAddress group = InetAddress.getByName(chatAddress);
-                                    MulticastSocket socket = new MulticastSocket(MESSAGE_PORT);
-                                    socket.joinGroup(group,);
-                                    //socket.joinGroup(); todo
-                                } catch (ProjectNotExistsException e) {
-                                    e.printStackTrace();
-                                }*/
-
                                 break;
                             }
                             case CommunicationProtocol.CARD_HISTORY_CMD: {
@@ -453,6 +467,32 @@ public class SelectionTask implements Runnable {
                                 String projectName = arguments.get(0);
                                 try {
                                     data.cancelProject(projectName, username);
+
+                                    // il server avvisa tutti gli utenti nella chat di progetto
+                                    // che il progetto è stato cancellato
+                                    try {
+                                        String chatAddress = data.getProjectChatAddress(projectName);
+                                        InetAddress group = InetAddress.getByName(chatAddress);
+                                        MulticastSocket multicastSocket = new MulticastSocket(CommunicationProtocol.UDP_CHAT_PORT);
+
+                                        UDPMessage udpMessage = new UDPMessage(
+                                                CommunicationProtocol.SYSTEM_NAME,
+                                                CommunicationProtocol.UDP_TERMINATE_MSG,
+                                                true
+                                        );
+                                        byte[] byteMessage = this.mapper.writeValueAsBytes(udpMessage);
+                                        DatagramPacket packet = new DatagramPacket(
+                                                byteMessage,
+                                                byteMessage.length,
+                                                group,
+                                                CommunicationProtocol.UDP_CHAT_PORT
+                                        );
+                                        multicastSocket.send(packet);
+
+                                    } catch (ProjectNotExistsException e) {
+                                        e.printStackTrace();
+                                    }
+
                                 } catch (ProjectNotExistsException e) {
                                     responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
                                 } catch (UnauthorizedUserException e) {

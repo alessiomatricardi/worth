@@ -1,24 +1,24 @@
 package worth.client.controller;
 
+import worth.client.ReadChatTask;
 import worth.client.model.ClientModel;
 import worth.client.ui.LoggedUI;
 import worth.client.ui.WorthFrame;
-import worth.client.ui.loggedPanels.HomePanel;
-import worth.client.ui.loggedPanels.ProjectDetailPanel;
-import worth.client.ui.loggedPanels.ShowProjectsPanel;
-import worth.client.ui.loggedPanels.ShowUsersPanel;
+import worth.client.ui.loggedPanels.*;
 import worth.data.Project;
 import worth.data.UserStatus;
 import worth.exceptions.*;
+import worth.protocol.CommunicationProtocol;
 import worth.utils.UIMessages;
 import worth.utils.Utils;
 
 import javax.swing.*;
-import java.awt.*;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Created by alessiomatricardi on 05/01/21
@@ -124,7 +124,33 @@ public class LoggedController {
     }
 
     private void showProjectDetails(String projectName) {
+        // todo
+    }
 
+    private void readChat() {
+        // seleziona nome progetto todo
+        try {
+            String chatAddress = this.model.readChat("a");
+            if (chatAddress != null) {
+                ChatMessageList chatMessageList = new ChatMessageList();
+                ReadChatTask readChatTask = new ReadChatTask(
+                        this.model.getUsername(),
+                        this.model.getMulticastSocket(),
+                        chatAddress,
+                        CommunicationProtocol.UDP_CHAT_PORT,
+                        chatMessageList
+                );
+                ExecutorService threadPool = this.model.getThreadPool();
+                threadPool.execute(readChatTask);
+            }
+            // visualizza quella card
+        } catch (UnknownHostException | CommunicationException e) {
+            Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
+        } catch (ProjectNotExistsException e) {
+            Utils.showErrorMessageDialog(UIMessages.PROJECT_NOT_EXISTS);
+        } catch (UnauthorizedUserException e) {
+            Utils.showErrorMessageDialog(UIMessages.UNAUTHORIZED_USER);
+        }
     }
 
     private void createProject() {

@@ -8,17 +8,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  * Struttura di un messaggio UDP inviato nella chat
  */
 public class UDPMessage {
-    // messaggio che, inviato dal server, chiude il servizio di chat
-    public final static String TERMINATE = "stop";
-
     private String author;          // nome di colui che invia il messaggio
     private String message;         // messaggio da inviare
-    private boolean isFromSystem;   // è il sistema a inviare il messaggio?
+    private boolean fromSystem;   // è il sistema a inviare il messaggio?
 
     public UDPMessage(String author, String message, boolean isFromSystem) {
         this.author = author;
         this.message = message;
-        this.isFromSystem = isFromSystem;
+        this.fromSystem = isFromSystem;
     }
 
     @JsonCreator
@@ -33,6 +30,6 @@ public class UDPMessage {
     }
 
     public boolean isFromSystem() {
-        return isFromSystem;
+        return fromSystem;
     }
 }

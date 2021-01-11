@@ -18,6 +18,16 @@ public abstract class CommunicationProtocol {
     // Porta utilizzata nelle chat multicast
     public static final int UDP_CHAT_PORT = 50000;
 
+    // quantità massima di bytes trasportabili in un messaggio UDP
+    // 16 bit -> 2^16 = 65536
+    public static final int UDP_MSG_MAX_LEN = 65536;
+
+    // nome del sistema (utilizzato principalmente come autore dei messaggi UDP)
+    public final static String SYSTEM_NAME = "System";
+
+    // messaggio che, se inviato dal server, chiude il servizio di chat
+    public final static String UDP_TERMINATE_MSG = "stop";
+
     // Nome del servizio di registrazione offerto da RMI
     public static final String REGISTRATION_SERVICE_NAME =
             "rmi://" + SERVER_IP_ADDRESS +":" + REGISTRY_PORT + "/RegistrationService";

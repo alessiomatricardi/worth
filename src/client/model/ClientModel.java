@@ -14,6 +14,7 @@ import worth.server.rmi.RMIRegistrationService;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.MulticastSocket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +24,9 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by alessiomatricardi on 03/01/21
@@ -31,13 +35,15 @@ import java.util.*;
  */
 public class ClientModel {
     private static final int ALLOCATION_SIZE = 512*512; // spazio di allocazione del buffer
-    private boolean isLogged;                   // l'utente è loggato?
-    private String username;                    // per tenere traccia dello username dell'utente
-    private final SocketChannel socket;               // socket per instaurazione connessione
-    private final ObjectMapper mapper;                // mapper per serializzazione/deserializzazione
-    private Map<String, UserStatus> userStatus; // lista degli stati degli utenti
-    private RMICallbackNotify callbackNotify;   // gestione callback
-    private Map<String, String> projectChatAddresses; // indirizzi multicast dei progetti
+    private boolean isLogged;                           // l'utente è loggato?
+    private String username;                            // per tenere traccia dello username dell'utente
+    private final SocketChannel socket;                 // socket per instaurazione connessione
+    private final ObjectMapper mapper;                  // mapper per serializzazione/deserializzazione
+    private Map<String, UserStatus> userStatus;         // lista degli stati degli utenti
+    private RMICallbackNotify callbackNotify;           // gestione callback
+    private Map<String, String> projectChatAddresses;   // indirizzi multicast dei progetti
+    private ExecutorService threadPool;                 // threadpool per servizio di lettura chat
+    private MulticastSocket multicastSocket;            // socket per chat multicast
 
     // predispone la connessione del client con il server
     public ClientModel() throws IOException {
@@ -60,15 +66,21 @@ public class ClientModel {
         this.userStatus = null; // non è ancora il momento di inizializzarlo
         this.callbackNotify = null; // non è ancora il momento di inizializzarlo
         this.projectChatAddresses = new HashMap<>();
+        this.threadPool = Executors.newCachedThreadPool();
+        this.multicastSocket = new MulticastSocket(CommunicationProtocol.UDP_CHAT_PORT);
+        this.multicastSocket.setSoTimeout(2000); // todo better
         this.isLogged = false;
         this.username = "";
     }
 
-    public void closeConnection() { // todo possibile chiudere threads
+    public void closeConnection() {
         if (!this.isLogged) return;
         try {
             this.unregisterForCallback();
             this.socket.close();
+
+            // shutdown threads lettori delle chat
+            shutdownThreadPool();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -158,6 +170,9 @@ public class ClientModel {
         // non sono più loggato
         this.username = "";
         this.isLogged = false;
+
+        // shutdown threads lettori delle chat
+        shutdownThreadPool();
     }
 
     public Map<String, UserStatus> listUsers() {
@@ -466,8 +481,33 @@ public class ClientModel {
         }
     }
 
+    public MulticastSocket getMulticastSocket() {
+        return this.multicastSocket;
+    }
+
+    public ExecutorService getThreadPool() {
+        return this.threadPool;
+    }
+
     public String getUsername() {
         return this.username;
+    }
+
+    /**
+     * Termina tutti i thread incaricati a ricevere i messaggi delle chat multicast
+     */
+    public void shutdownThreadPool() {
+        try {
+            this.threadPool.shutdownNow();
+
+            while (!this.threadPool.isTerminated()) {
+                // ogni secondo torno a controllare
+                this.threadPool.awaitTermination(1, TimeUnit.SECONDS);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Thread.currentThread().interrupt();
+        }
     }
 
     /**
