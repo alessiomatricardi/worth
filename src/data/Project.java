@@ -150,7 +150,7 @@ public class Project implements Serializable {
 
     // posso eliminare il progetto?
     @JsonIgnore
-    public boolean isCloseable() {
+    public boolean isCancelable() {
         CardStatus[] values = CardStatus.values();
         for (CardStatus status : values) {
             if (status != CardStatus.DONE)

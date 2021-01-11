@@ -1,5 +1,7 @@
 package worth.client.ui;
 
+import worth.utils.MyCardLayout;
+
 import javax.swing.*;
 import java.awt.*;
 

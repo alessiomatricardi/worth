@@ -1,4 +1,4 @@
-package worth.client.ui;
+package worth.utils;
 
 import java.awt.*;
 

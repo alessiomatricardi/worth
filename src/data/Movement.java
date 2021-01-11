@@ -12,9 +12,9 @@ import java.time.ZoneId;
  * Rappresenta un movimento di una carta
  */
 public class Movement implements Serializable {
-    private CardStatus from;
-    private CardStatus to;
-    private LocalDateTime when;
+    private CardStatus from;        // stato di partenza
+    private CardStatus to;          // stato di arrivo
+    private LocalDateTime when;     // quando è stato effettuato
 
     @JsonCreator
     private Movement() {}

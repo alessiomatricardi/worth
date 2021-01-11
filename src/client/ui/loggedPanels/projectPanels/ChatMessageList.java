@@ -1,4 +1,4 @@
-package worth.client.ui.loggedPanels;
+package worth.client.ui.loggedPanels.projectPanels;
 
 /**
  * Created by alessiomatricardi on 11/01/21

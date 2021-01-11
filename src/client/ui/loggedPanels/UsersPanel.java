@@ -9,36 +9,41 @@ import java.util.List;
  *
  * Panel che mostra gli utenti
  */
-public class ShowUsersPanel extends JPanel {
+public class UsersPanel extends JPanel {
     public static final String SHOW_ALL_USERS_TEXT = "Show all users";
     public static final String SHOW_ONLY_ON_TEXT = "Show only online users";
     private JButton onlineToggle;       // button per vedere tutti gli utenti o solo quelli online
     private Component userComponent;    // pannello che contiene la lista di utenti
 
-    public ShowUsersPanel() {
+    public UsersPanel() {
         this.setLayout(new BorderLayout());
         this.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
         onlineToggle = new JButton(SHOW_ONLY_ON_TEXT);
+        onlineToggle.setPreferredSize(new Dimension(300, 30));
+
         userComponent = null;
 
         this.add(onlineToggle, BorderLayout.NORTH);
     }
 
     public void setUI(List<JLabel> users) {
-        JPanel projectsPanel = new JPanel();
-        projectsPanel.setLayout(new GridLayout(0, 1, 0, 0));
+        JPanel usersPanel = new JPanel();
+        usersPanel.setLayout(new GridLayout(0, 1, 0, 0));
 
+        // inserisco gli utenti nel pannello
         for (JLabel user : users) {
             Font font = user.getFont();
             user.setFont(new Font(font.getName(), Font.PLAIN, (int)(font.getSize() * 1.5)));
             user.setPreferredSize(new Dimension(300, 50));
-            projectsPanel.add(user);
+            usersPanel.add(user);
         }
 
+        // container contiene il pannello degli utenti
         JPanel container = new JPanel(new BorderLayout(0,0));
-        container.add(projectsPanel, BorderLayout.NORTH);
-        // layout scrollabile se necessario
+        container.add(usersPanel, BorderLayout.NORTH);
+
+        // layout scrollabile, se necessario
         JScrollPane scrollPane = new JScrollPane(
                 container,
                 ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -49,6 +54,7 @@ public class ShowUsersPanel extends JPanel {
         // niente bordi
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
+        // elimino pannello precedente e aggiungo il nuovo
         if (this.userComponent != null)
             this.remove(this.userComponent);
         this.userComponent = scrollPane;

@@ -319,14 +319,14 @@ public class PersistentData implements Registration, TCPOperations {
     }
 
     @Override
-    public void cancelProject(String projectName, String whoRequest) throws ProjectNotExistsException, UnauthorizedUserException, ProjectNotCloseableException {
+    public void cancelProject(String projectName, String whoRequest) throws ProjectNotExistsException, UnauthorizedUserException, ProjectNotCancelableException {
         Project project;
         if ((project = this.projects.get(projectName)) == null)
             throw new ProjectNotExistsException();
         if (!project.getMembers().contains(whoRequest))
             throw new UnauthorizedUserException();
-        if (!project.isCloseable())
-            throw new ProjectNotCloseableException();
+        if (!project.isCancelable())
+            throw new ProjectNotCancelableException();
         // libero indirizzo multicast
         MulticastAddressManager.freeAddress(project.getChatAddress());
         // rimuovo progetto

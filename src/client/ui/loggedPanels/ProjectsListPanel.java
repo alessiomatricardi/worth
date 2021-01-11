@@ -10,9 +10,9 @@ import java.util.List;
  *
  * Pannello dove vengono visualizzati tutti i progetti
  */
-public class ShowProjectsPanel extends JPanel {
+public class ProjectsListPanel extends JPanel {
 
-    public ShowProjectsPanel() {
+    public ProjectsListPanel() {
         this.setLayout(new BorderLayout());
     }
 
@@ -20,6 +20,7 @@ public class ShowProjectsPanel extends JPanel {
         JPanel projectsPanel = new JPanel();
         projectsPanel.setLayout(new GridLayout(0, 2, 0, 0));
 
+        // inserisco buttons nel pannello
         // ogni buttons ha altezza 100
         for (JButton button : buttons) {
             Font font = button.getFont();
@@ -28,8 +29,10 @@ public class ShowProjectsPanel extends JPanel {
             projectsPanel.add(button);
         }
 
+        // container contiene il pannello dei progetti
         JPanel container = new JPanel(new BorderLayout(0,0));
         container.add(projectsPanel, BorderLayout.NORTH);
+
         // layout scrollabile se necessario
         JScrollPane scrollPane = new JScrollPane(
                 container,

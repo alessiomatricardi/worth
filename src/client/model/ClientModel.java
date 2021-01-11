@@ -1,5 +1,6 @@
 package worth.client.model;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -9,12 +10,12 @@ import worth.data.*;
 import worth.protocol.CommunicationProtocol;
 import worth.protocol.ResponseMessage;
 import worth.exceptions.*;
+import worth.protocol.UDPMessage;
 import worth.server.rmi.RMICallbackService;
 import worth.server.rmi.RMIRegistrationService;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.MulticastSocket;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
@@ -460,8 +461,30 @@ public class ClientModel {
         }
     }
 
-    public void sendChatMsg(String projectName, String messaggio) {
-        // todo
+    public void sendChatMsg(String projectName, String message)
+            throws UnobtainableChatAddressException, IOException {
+        String chatAddress = this.projectChatAddresses.get(projectName);
+        if (chatAddress == null) {
+            // non dovrebbe accadere mai, siccome posso scrivere sulla chat
+            // solo se la sto guardando, ergo conosco il suo indirizzo multicast
+            throw new UnobtainableChatAddressException();
+        }
+        InetAddress group = InetAddress.getByName(chatAddress);
+
+        UDPMessage udpMessage = new UDPMessage(
+                this.username,
+                message,
+                false
+        );
+        byte[] byteMessage = this.mapper.writeValueAsBytes(udpMessage);
+        DatagramPacket packet = new DatagramPacket(
+                byteMessage,
+                byteMessage.length,
+                group,
+                CommunicationProtocol.UDP_CHAT_PORT
+        );
+
+        multicastSocket.send(packet);
     }
 
     public void cancelProject(String projectName) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {

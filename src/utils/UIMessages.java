@@ -69,8 +69,8 @@ public class UIMessages {
     public static final String PROJECT_ALREADY_EXISTS = "The project can't be created because" +
             " already exists another project with this name.";
 
-    // messaggio "progetto non chiudibile"
-    public static final String PROJECT_NOT_CLOSEABLE = "The project can't be closed because" +
+    // messaggio "progetto non cancellabile"
+    public static final String PROJECT_NOT_CANCELABLE = "The project can't be cancelled because" +
             " there are some tasks to do yet.";
 
     // messaggio "progetto inesistente"

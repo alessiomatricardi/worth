@@ -1,4 +1,4 @@
-package worth.client.ui.loggedPanels;
+package worth.client.ui.loggedPanels.projectPanels;
 
 import javax.swing.*;
 

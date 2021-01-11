@@ -200,11 +200,11 @@ public interface TCPOperations {
      *
      * @throws ProjectNotExistsException se il progetto non esiste
      * @throws UnauthorizedUserException se non si hanno le autorizzazioni necessarie
-     * @throws ProjectNotCloseableException se non tutte le card sono nello stato DONE
+     * @throws ProjectNotCancelableException se non tutte le card sono nello stato DONE
      *
      */
     void cancelProject(String projectName, String whoRequest)
-            throws ProjectNotExistsException, UnauthorizedUserException, ProjectNotCloseableException;
+            throws ProjectNotExistsException, UnauthorizedUserException, ProjectNotCancelableException;
 
     /**
      * Ottieni lo stato di tutti gli utenti

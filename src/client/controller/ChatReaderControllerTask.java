@@ -1,8 +1,8 @@
-package worth.client;
+package worth.client.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import worth.client.ui.loggedPanels.ChatMessageList;
+import worth.client.ui.loggedPanels.projectPanels.ChatMessageList;
 import worth.protocol.CommunicationProtocol;
 import worth.protocol.UDPMessage;
 
@@ -16,17 +16,17 @@ import java.nio.charset.StandardCharsets;
  *
  * Thread che si occupa di leggere la chat e popolare la UI con i messaggi arrivati
  */
-public class ReadChatTask implements Runnable {
+public class ChatReaderControllerTask implements Runnable {
     private final String applicationUser;           // utente online sull'applicativo
     private final MulticastSocket socket;           // socket
     private final InetAddress group;                // indirizzo multicast
     private final int port;                         // porta dove ricevere i messaggi
     private final ChatMessageList chatMessageList;  // dove aggiungere i messaggi
 
-    public ReadChatTask(String user,
-                        MulticastSocket socket,
-                        String address, int port,
-                        ChatMessageList chatMessageList
+    public ChatReaderControllerTask(String user,
+                                    MulticastSocket socket,
+                                    String address, int port,
+                                    ChatMessageList chatMessageList
     ) throws UnknownHostException {
         this.applicationUser = user;
         this.socket = socket;

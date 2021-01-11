@@ -1,10 +1,12 @@
 package worth.client.controller;
 
-import worth.client.ReadChatTask;
 import worth.client.model.ClientModel;
+import worth.client.ui.HostsCardsContainer;
 import worth.client.ui.LoggedUI;
 import worth.client.ui.WorthFrame;
 import worth.client.ui.loggedPanels.*;
+import worth.client.ui.loggedPanels.projectPanels.ChatMessageList;
+import worth.client.ui.loggedPanels.ProjectDetailsPanel;
 import worth.data.Project;
 import worth.data.UserStatus;
 import worth.exceptions.*;
@@ -41,7 +43,7 @@ public class LoggedController {
 
         this.view.getUserListButton().addActionListener(e -> this.showUsers(false));
 
-        this.view.getShowProjectsButton().addActionListener(e -> this.showProjects());
+        this.view.getShowProjectsListButton().addActionListener(e -> this.showProjectsList());
 
         this.view.getLogoutButton().addActionListener(e -> {
             int result = Utils.showQuestionMessageDialog(UIMessages.LOGOUT_MESSAGE);
@@ -51,28 +53,37 @@ public class LoggedController {
         });
 
         // azioni possibili in panel contenuti dentro la view
+
+        // dentro HomePanel posso creare un progetto
         HomePanel homePanel = this.view.getHomePanel();
         homePanel.getCreateProjectButton().addActionListener(e -> this.createProject());
 
-        ShowUsersPanel showUsersPanel = this.view.getShowUsersPanel();
-        showUsersPanel.getOnlineToggle().addActionListener(e -> {
-            if (showUsersPanel.getOnlineToggle().getText().equals(ShowUsersPanel.SHOW_ALL_USERS_TEXT)) {
+        // dentro UsersPanel posso vedere la lista degli utenti
+        UsersPanel usersPanel = this.view.getUsersPanel();
+        usersPanel.getOnlineToggle().addActionListener(e -> {
+            if (usersPanel.getOnlineToggle().getText().equals(UsersPanel.SHOW_ALL_USERS_TEXT)) {
+                // voglio vedere tutti gli utenti
                 this.showUsers(false);
-                showUsersPanel.getOnlineToggle().setText(ShowUsersPanel.SHOW_ONLY_ON_TEXT);
+                usersPanel.getOnlineToggle().setText(UsersPanel.SHOW_ONLY_ON_TEXT);
             } else {
+                // voglio vedere solo gli utenti online
                 this.showUsers(true);
-                showUsersPanel.getOnlineToggle().setText(ShowUsersPanel.SHOW_ALL_USERS_TEXT);
+                usersPanel.getOnlineToggle().setText(UsersPanel.SHOW_ALL_USERS_TEXT);
             }
         });
 
-        ShowProjectsPanel showProjectsPanel = this.view.getShowProjectsPanel();
+        // dentro ProjectsListPanel posso vedere la lista dei progetti dell'utente online
+        ProjectsListPanel projectsListPanel = this.view.getProjectsListPanel();
 
-        ProjectDetailPanel projectDetailPanel = this.view.getProjectDetailPanel();
+        // dentro ProjectsDetailsPanel posso vedere i dettagli di un singolo progetto
+        ProjectDetailsPanel projectDetailsPanel = this.view.getProjectDetailsPanel();
 
     }
 
+    // visualizza cards dentro LoggedUI
+
     private void showHome() {
-        this.showPanel(LoggedUI.HOME_PANEL);
+        this.showCard(this.view, LoggedUI.HOME_PANEL);
     }
 
     private void showUsers(boolean onlyOnlineUsers) {
@@ -91,31 +102,33 @@ public class LoggedController {
                 labels.add(new JLabel(text));
             }
         }
-        ShowUsersPanel showUsersPanel = this.view.getShowUsersPanel();
-        showUsersPanel.setUI(labels);
+        UsersPanel usersPanel = this.view.getUsersPanel();
+        usersPanel.setUI(labels);
         // aggiorno UI
-        this.updateUI(showUsersPanel);
-        this.showPanel(LoggedUI.USERS_PANEL);
+        this.updateUI(usersPanel);
+        this.showCard(this.view, LoggedUI.USERS_PANEL);
     }
 
-    private void showProjects() {
+    private void showProjectsList() {
         try {
             List<Project> projects = this.model.listProjects();
             // creo buttons
             List<JButton> buttons = new ArrayList<>();
             for (Project project : projects) {
+                // creo bottone con nome del progetto
                 JButton button = new JButton(project.getName());
                 // aggiungo azione
+                // quando clicco sul bottone, vado ai dettagli del progetto
                 button.addActionListener(e -> this.showProjectDetails(button.getText()));
                 // aggiungo alla lista
                 buttons.add(button);
             }
             // aggiungo elementi
-            ShowProjectsPanel showProjectsPanel = this.view.getShowProjectsPanel();
-            showProjectsPanel.setUI(buttons);
+            ProjectsListPanel projectsListPanel = this.view.getProjectsListPanel();
+            projectsListPanel.setUI(buttons);
             // aggiorno UI
-            this.updateUI(showProjectsPanel);
-            this.showPanel(LoggedUI.PROJECTS_PANEL);
+            this.updateUI(projectsListPanel);
+            this.showCard(this.view, LoggedUI.PROJECTS_PANEL);
         } catch (CommunicationException e) {
             Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
         } catch (UserNotExistsException e) {
@@ -124,7 +137,30 @@ public class LoggedController {
     }
 
     private void showProjectDetails(String projectName) {
-        // todo
+        ProjectDetailsPanel detailsPanel = this.view.getProjectDetailsPanel();
+
+        // todo controllers
+
+        detailsPanel.setUI(projectName);
+        this.showCard(this.view, LoggedUI.PROJECT_DETAILS_PANEL);
+    }
+
+    // visualizza cards dentro ProjectDetails todo
+
+    private void showProjectCards() {
+
+    }
+
+    private void showProjectMembers() {
+
+    }
+
+    private void showCardDetails() {
+
+    }
+
+    private void showProjectChat() {
+
     }
 
     private void readChat() {
@@ -133,7 +169,7 @@ public class LoggedController {
             String chatAddress = this.model.readChat("a");
             if (chatAddress != null) {
                 ChatMessageList chatMessageList = new ChatMessageList();
-                ReadChatTask readChatTask = new ReadChatTask(
+                ChatReaderControllerTask chatReaderControllerTask = new ChatReaderControllerTask(
                         this.model.getUsername(),
                         this.model.getMulticastSocket(),
                         chatAddress,
@@ -141,9 +177,9 @@ public class LoggedController {
                         chatMessageList
                 );
                 ExecutorService threadPool = this.model.getThreadPool();
-                threadPool.execute(readChatTask);
+                threadPool.execute(chatReaderControllerTask);
             }
-            // visualizza quella card
+            // visualizza quella card todo
         } catch (UnknownHostException | CommunicationException e) {
             Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
         } catch (ProjectNotExistsException e) {
@@ -192,9 +228,9 @@ public class LoggedController {
         panel.repaint();
     }
 
-    // visualizza un pannello todo completa
-    private void showPanel(String panelName) {
-        this.view.getCardLayout().show(this.view.getContainerPanel(), panelName);
+    // visualizza la card cardName all'interno del panel hostPanel
+    private void showCard(HostsCardsContainer hostPanel, String cardName) {
+        hostPanel.getCardLayout().show(this.view.getContainerPanel(), cardName);
     }
 
     // torna alla schermata di login
