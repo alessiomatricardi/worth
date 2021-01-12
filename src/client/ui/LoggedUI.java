@@ -9,7 +9,7 @@ import java.awt.*;
 /**
  * Created by alessiomatricardi on 04/01/21
  *
- * Pannello principale di un utente loggato
+ * Pannello principale di un utente online
  */
 public class LoggedUI extends JPanel implements HostsCardsContainer {
     private static final int WIDTH = 1000; // larghezza del panel

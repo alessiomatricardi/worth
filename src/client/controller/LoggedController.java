@@ -26,7 +26,7 @@ import java.util.concurrent.ExecutorService;
 /**
  * Created by alessiomatricardi on 05/01/21
  *
- * Controller che gestisce la UI dell'utente loggato
+ * Controller che gestisce la UI dell'utente online
  */
 public class LoggedController {
     private final ClientModel model;

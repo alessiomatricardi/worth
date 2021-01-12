@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ClientModel {
     private static final int ALLOCATION_SIZE = 512*512; // spazio di allocazione del buffer
-    private boolean isLogged;                           // l'utente è loggato?
+    private boolean isLogged;                           // l'utente è online?
     private String username;                            // per tenere traccia dello username dell'utente
     private final SocketChannel socket;                 // socket per instaurazione connessione
     private final ObjectMapper mapper;                  // mapper per serializzazione/deserializzazione
@@ -134,7 +134,7 @@ public class ClientModel {
             e.printStackTrace();
         }
 
-        // sono loggato
+        // sono online
         this.username = username;
         this.isLogged = true;
     }
@@ -161,7 +161,7 @@ public class ClientModel {
             e.printStackTrace();
         }
 
-        // non sono più loggato
+        // non sono più online
         this.username = "";
         this.isLogged = false;
 

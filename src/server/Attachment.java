@@ -8,8 +8,8 @@ import java.nio.ByteBuffer;
  * Attachment di una socket nel selector
  */
 public class Attachment {
-    private String username;
-    private ByteBuffer buffer;
+    private String username;    // username dell'utente online
+    private ByteBuffer buffer;  // buffer associato alla socket
 
     public Attachment() {
         username = null;

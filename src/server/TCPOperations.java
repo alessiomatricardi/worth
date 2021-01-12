@@ -21,7 +21,7 @@ public interface TCPOperations {
      * @param password password dell'utente
      *
      * @throws UserNotExistsException se l'utente non esiste
-     * @throws AlreadyLoggedException se l'utente è già loggato al servizio
+     * @throws AlreadyLoggedException se l'utente è già online
      * @throws WrongPasswordException se la password immessa è errata
      */
     void login(String username, String password)

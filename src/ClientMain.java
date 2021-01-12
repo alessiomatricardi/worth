@@ -43,7 +43,7 @@ public class ClientMain {
         AuthUI authUI = new AuthUI();
         AuthController authController = new AuthController(model, authUI);
 
-        // crea pannello di controllo dell'utente loggato
+        // crea pannello di controllo dell'utente online
         LoggedUI loggedUI = new LoggedUI();
         LoggedController loggedController = new LoggedController(model, loggedUI);
 
