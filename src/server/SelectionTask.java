@@ -1,24 +1,25 @@
 package worth.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import worth.data.*;
 import worth.exceptions.*;
 import worth.protocol.CommunicationProtocol;
 import worth.protocol.ResponseMessage;
 import worth.protocol.UDPMessage;
 import worth.server.rmi.RMICallbackServiceImpl;
+import worth.utils.MyObjectMapper;
 
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
  * Created by alessiomatricardi on 03/01/21
+ *
+ * Task che si occupa di servire i clienti implementando un selettore NIO
  */
 public class SelectionTask implements Runnable {
     private static final int ALLOCATION_SIZE = 1024;    // size (in byte) per allocazione di un ByteBuffer
@@ -30,13 +31,7 @@ public class SelectionTask implements Runnable {
         this.data = data;
         this.callbackService = callbackService;
 
-        this.mapper = new ObjectMapper();
-        // abilita indentazione
-        this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        // formattazione data
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-        this.mapper.setDateFormat(dateFormat);
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        this.mapper = new MyObjectMapper();
     }
 
     public void run() {

@@ -1,9 +1,7 @@
 package worth.client.model;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import worth.client.model.rmi.RMICallbackNotify;
 import worth.client.model.rmi.RMICallbackNotifyImpl;
 import worth.data.*;
@@ -13,6 +11,7 @@ import worth.exceptions.*;
 import worth.protocol.UDPMessage;
 import worth.server.rmi.RMICallbackService;
 import worth.server.rmi.RMIRegistrationService;
+import worth.utils.MyObjectMapper;
 
 import java.io.IOException;
 import java.net.*;
@@ -23,7 +22,6 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -56,13 +54,7 @@ public class ClientModel {
         );
         this.socket.connect(address); // bloccante per il client
 
-        this.mapper = new ObjectMapper();
-        // abilita indentazione
-        this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        // formattazione data
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-        this.mapper.setDateFormat(dateFormat);
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        this.mapper = new MyObjectMapper();
 
         this.userStatus = null; // non è ancora il momento di inizializzarlo
         this.callbackNotify = null; // non è ancora il momento di inizializzarlo
@@ -579,6 +571,10 @@ public class ClientModel {
             StringBuilder responseMessage = new StringBuilder();
             do {
                 byteReaded = socket.read(readBuffer);
+                // se ci sono errori, lancio eccezione
+                if (byteReaded == -1)
+                    throw new CommunicationException();
+
                 totalReaded += byteReaded;
 
                 readBuffer.flip();

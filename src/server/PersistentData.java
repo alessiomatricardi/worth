@@ -2,10 +2,10 @@ package worth.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import worth.data.*;
 import worth.exceptions.*;
 import worth.utils.MulticastAddressManager;
+import worth.utils.MyObjectMapper;
 import worth.utils.PasswordManager;
 import worth.utils.PasswordManagerImpl;
 
@@ -16,7 +16,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,13 +45,7 @@ public class PersistentData implements Registration, TCPOperations {
         this.userStatus = new ConcurrentHashMap<>();
 
         // Jackson object
-        mapper = new ObjectMapper();
-        // abilita indentazione
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        // formattazione data
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-        mapper.setDateFormat(dateFormat);
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper = new MyObjectMapper();
 
         this.init();
     }

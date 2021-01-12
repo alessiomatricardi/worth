@@ -4,6 +4,8 @@ import javax.swing.JOptionPane;
 
 /**
  * Created by alessiomatricardi on 02/01/21
+ *
+ * Funzioni di utilità di diversa natura
  */
 public class Utils {
 
