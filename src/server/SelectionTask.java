@@ -330,7 +330,7 @@ public class SelectionTask implements Runnable {
                                 String description = arguments.get(2);
 
                                 // check: cardName deve rispettare lo string regex
-                                if (!projectName.matches(CommunicationProtocol.STRING_REGEX)) {
+                                if (!cardName.matches(CommunicationProtocol.STRING_REGEX)) {
                                     responseCode = CommunicationProtocol.CHARS_NOT_ALLOWED;
                                     break;
                                 }
