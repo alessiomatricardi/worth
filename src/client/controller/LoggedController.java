@@ -64,7 +64,7 @@ public class LoggedController {
             if (usersPanel.getOnlineToggle().getText().equals(UsersPanel.SHOW_ALL_USERS_TEXT)) {
                 // voglio vedere tutti gli utenti
                 this.showUsers(false);
-                usersPanel.getOnlineToggle().setText(UsersPanel.SHOW_ONLY_ON_TEXT);
+                usersPanel.getOnlineToggle().setText(UsersPanel.SHOW_ONLINE_USERS_TEXT);
             } else {
                 // voglio vedere solo gli utenti online
                 this.showUsers(true);

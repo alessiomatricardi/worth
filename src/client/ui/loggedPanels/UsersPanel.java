@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class UsersPanel extends JPanel {
     public static final String SHOW_ALL_USERS_TEXT = "Show all users";
-    public static final String SHOW_ONLY_ON_TEXT = "Show only online users";
+    public static final String SHOW_ONLINE_USERS_TEXT = "Show only online users";
     private JButton onlineToggle;       // button per vedere tutti gli utenti o solo quelli online
     private Component userComponent;    // pannello che contiene la lista di utenti
 
@@ -19,8 +19,7 @@ public class UsersPanel extends JPanel {
         this.setLayout(new BorderLayout());
         this.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        onlineToggle = new JButton(SHOW_ONLY_ON_TEXT);
-        onlineToggle.setPreferredSize(new Dimension(300, 30));
+        onlineToggle = new JButton(SHOW_ONLINE_USERS_TEXT);
 
         userComponent = null;
 

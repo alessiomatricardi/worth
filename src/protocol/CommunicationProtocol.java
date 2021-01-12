@@ -39,8 +39,8 @@ public abstract class CommunicationProtocol {
     // Lunghezza minima della password
     public static final int MIN_PASSWORD_LEN = 8;
 
-    // REGEX username, solo a-z, A-Z, 0-9, _ consentiti
-    public static final String STRING_REGEX = "^[a-zA-Z0-9_]+$";
+    // REGEX username, solo a-z, 0-9, _ consentiti
+    public static final String STRING_REGEX = "^[a-z0-9_]+$";
 
     // carattere separatore
     public static final String SEPARATOR = " ";
@@ -70,6 +70,9 @@ public abstract class CommunicationProtocol {
     // utente non autorizzato
     public static final int UNAUTHORIZED = 104;
 
+    // caratteri non consentiti
+    public static final int CHARS_NOT_ALLOWED = 105;
+
 
     public static final String LOGIN_CMD = "login";
     public static final int LOGIN_WRONGPWD = 1;
@@ -82,7 +85,6 @@ public abstract class CommunicationProtocol {
     public static final String CREATEPROJECT_CMD = "create_project";
     public static final int CREATEPROJECT_ALREADYEXISTS = 1;
     public static final int CREATEPROJECT_NOMOREADDRESSES = 2;
-    public static final int CREATEPROJECT_CHAR_NOT_ALLOW = 3;
 
     public static final String ADD_MEMBER_CMD = "add_member";
     public static final int ADD_MEMBER_ALREADYPRESENT = 1;

@@ -139,7 +139,8 @@ public class ClientModel {
         this.isLogged = true;
     }
 
-    public void logout() throws UserNotExistsException, CommunicationException {
+    public void logout()
+            throws UserNotExistsException, CommunicationException {
         // prepara messaggio da inviare
         String messageToSend = this.encodeMessageArguments(
                 CommunicationProtocol.LOGOUT_CMD
@@ -184,7 +185,8 @@ public class ClientModel {
         return toReturn;
     }
 
-    public List<Project> listProjects() throws CommunicationException, UserNotExistsException {
+    public List<Project> listProjects()
+            throws CommunicationException, UserNotExistsException {
         // prepara messaggio da inviare
         String messageToSend = this.encodeMessageArguments(
                 CommunicationProtocol.LISTPROJECTS_CMD
@@ -225,12 +227,13 @@ public class ClientModel {
         switch (response.getStatusCode()) { // casi di errori
             case CommunicationProtocol.CREATEPROJECT_ALREADYEXISTS -> throw new ProjectAlreadyExistsException();
             case CommunicationProtocol.CREATEPROJECT_NOMOREADDRESSES -> throw new NoSuchAddressException();
-            case CommunicationProtocol.CREATEPROJECT_CHAR_NOT_ALLOW -> throw new CharactersNotAllowedException();
+            case CommunicationProtocol.CHARS_NOT_ALLOWED -> throw new CharactersNotAllowedException();
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
         }
     }
 
-    public void addMember(String projectName, String username) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException, UserAlreadyPresentException, UserNotExistsException {
+    public void addMember(String projectName, String username)
+            throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException, UserAlreadyPresentException, UserNotExistsException {
         // prepara messaggio da inviare
         String messageToSend = this.encodeMessageArguments(
                 CommunicationProtocol.ADD_MEMBER_CMD,
@@ -250,7 +253,8 @@ public class ClientModel {
         }
     }
 
-    public List<String> showMembers(String projectName) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
+    public List<String> showMembers(String projectName)
+            throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
         // prepara messaggio da inviare
         String messageToSend = this.encodeMessageArguments(
                 CommunicationProtocol.SHOW_MEMBERS_CMD,
@@ -279,7 +283,8 @@ public class ClientModel {
         }
     }
 
-    public List<String> showCards(String projectName) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
+    public List<String> showCards(String projectName)
+            throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
         // prepara messaggio da inviare
         String messageToSend = this.encodeMessageArguments(
                 CommunicationProtocol.SHOW_CARDS_CMD,
@@ -308,7 +313,8 @@ public class ClientModel {
         }
     }
 
-    public Card showCard(String projectName, String cardName) throws CommunicationException, ProjectNotExistsException, CardNotExistsException, UnauthorizedUserException {
+    public Card showCard(String projectName, String cardName)
+            throws CommunicationException, ProjectNotExistsException, CardNotExistsException, UnauthorizedUserException {
         // prepara messaggio da inviare
         String messageToSend = this.encodeMessageArguments(
                 CommunicationProtocol.SHOW_CARD_CMD,
@@ -339,7 +345,8 @@ public class ClientModel {
         }
     }
 
-    public void addCard(String projectName, String cardName, String description) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException, CardAlreadyExistsException {
+    public void addCard(String projectName, String cardName, String description)
+            throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException, CardAlreadyExistsException, CharactersNotAllowedException {
         // prepara messaggio da inviare
         String messageToSend = this.encodeMessageArguments(
                 CommunicationProtocol.ADD_CARD_CMD,
@@ -355,11 +362,13 @@ public class ClientModel {
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
             case CommunicationProtocol.PROJECT_NOT_EXISTS -> throw new ProjectNotExistsException();
             case CommunicationProtocol.UNAUTHORIZED -> throw new UnauthorizedUserException();
+            case CommunicationProtocol.CHARS_NOT_ALLOWED -> throw new CharactersNotAllowedException();
             case CommunicationProtocol.ADD_CARD_ALREADYEXISTS -> throw new CardAlreadyExistsException();
         }
     }
 
-    public void moveCard(String projectName, String cardName, CardStatus from, CardStatus to) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException, OperationNotAllowedException, CardNotExistsException {
+    public void moveCard(String projectName, String cardName, CardStatus from, CardStatus to)
+            throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException, OperationNotAllowedException, CardNotExistsException {
         // prepara messaggio da inviare
         String messageToSend = this.encodeMessageArguments(
                 CommunicationProtocol.MOVE_CARD_CMD,
@@ -381,7 +390,8 @@ public class ClientModel {
         }
     }
 
-    public List<Movement> getCardHistory(String projectName, String cardName) throws CommunicationException, CardNotExistsException, UnauthorizedUserException, ProjectNotExistsException {
+    public List<Movement> getCardHistory(String projectName, String cardName)
+            throws CommunicationException, CardNotExistsException, UnauthorizedUserException, ProjectNotExistsException {
         // prepara messaggio da inviare
         String messageToSend = this.encodeMessageArguments(
                 CommunicationProtocol.CARD_HISTORY_CMD,
@@ -412,7 +422,8 @@ public class ClientModel {
         }
     }
 
-    public String readChat(String projectName) throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
+    public String readChat(String projectName)
+            throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
         // se lo ho già, non devo chiedere al server l'indirizzo multicast
         String chatAddress;
         chatAddress = this.projectChatAddresses.get(projectName);

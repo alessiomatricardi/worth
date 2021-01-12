@@ -212,7 +212,7 @@ public class SelectionTask implements Runnable {
 
                                 String projectName = arguments.get(0);
                                 if (!projectName.matches(CommunicationProtocol.STRING_REGEX)) {
-                                    responseCode = CommunicationProtocol.CREATEPROJECT_CHAR_NOT_ALLOW;
+                                    responseCode = CommunicationProtocol.CHARS_NOT_ALLOWED;
                                     break;
                                 }
 
@@ -328,6 +328,13 @@ public class SelectionTask implements Runnable {
                                 String projectName = arguments.get(0);
                                 String cardName = arguments.get(1);
                                 String description = arguments.get(2);
+
+                                // check: cardName deve rispettare lo string regex
+                                if (!projectName.matches(CommunicationProtocol.STRING_REGEX)) {
+                                    responseCode = CommunicationProtocol.CHARS_NOT_ALLOWED;
+                                    break;
+                                }
+
                                 try {
                                     data.addCard(projectName, cardName, description, username);
                                 } catch (ProjectNotExistsException e) {
