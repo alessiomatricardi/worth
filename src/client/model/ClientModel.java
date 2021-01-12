@@ -530,7 +530,7 @@ public class ClientModel {
 
             while (!this.threadPool.isTerminated()) {
                 // ogni secondo torno a controllare
-                this.threadPool.awaitTermination(1, TimeUnit.SECONDS);
+                this.threadPool.awaitTermination(500, TimeUnit.MILLISECONDS);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -539,12 +539,29 @@ public class ClientModel {
     }
 
     /**
+     * Stampa il messaggio che il client vuole inviare al server
+     *
+     * @param command comando da eseguire
+     * @param args argomenti specifici del comando da eseguire
+     */
+    private void printCall(String command, String... args) {
+        System.out.print("Call: " + command);
+        for (String arg : args) {
+            System.out.print(" <" + arg + ">");
+        }
+        System.out.println();
+    }
+
+    /**
      * @param command comando da eseguire
      * @param args argomenti specifici del comando da eseguire
      *
      * @return comando completo con argomenti codificati in Base64
-     * */
+     */
     private String encodeMessageArguments(String command, String... args) {
+        // stampa di log
+        this.printCall(command, args);
+
         StringBuilder toReturn = new StringBuilder(command);
         for (String arg : args) {
             String encoded = Base64.getEncoder().encodeToString(arg.getBytes());
@@ -600,7 +617,10 @@ public class ClientModel {
             } while (totalReaded < messageLength);
 
             String stringResponse = responseMessage.toString();
-            System.out.println(stringResponse);
+
+            // stampa di log
+            System.out.println("Response:\n" + stringResponse);
+
             ResponseMessage response = this.mapper.readValue(stringResponse, new TypeReference<ResponseMessage>() {});
             return response;
         } catch (IOException e) {

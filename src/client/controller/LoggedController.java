@@ -5,8 +5,9 @@ import worth.client.ui.HostsCardsContainer;
 import worth.client.ui.LoggedUI;
 import worth.client.ui.WorthFrame;
 import worth.client.ui.loggedPanels.*;
-import worth.client.ui.loggedPanels.projectPanels.ChatMessageList;
+import worth.client.ui.loggedPanels.projectPanels.ChatCard;
 import worth.client.ui.loggedPanels.ProjectDetailsPanel;
+import worth.client.ui.loggedPanels.projectPanels.ChatPanel;
 import worth.data.Project;
 import worth.data.UserStatus;
 import worth.exceptions.*;
@@ -30,6 +31,7 @@ import java.util.concurrent.ExecutorService;
 public class LoggedController {
     private final ClientModel model;
     private final LoggedUI view;
+    private String selectedProject; // ultimo progetto visualizzato dall'utente
 
     public LoggedController(ClientModel model, LoggedUI view) {
         this.model = model;
@@ -39,6 +41,7 @@ public class LoggedController {
 
     private void initController() {
         // azioni possibili in LoggedUI
+
         this.view.getHomeButton().addActionListener(e -> this.showHome());
 
         this.view.getUserListButton().addActionListener(e -> this.showUsers(false));
@@ -73,10 +76,16 @@ public class LoggedController {
         });
 
         // dentro ProjectsListPanel posso vedere la lista dei progetti dell'utente online
+        // l'inizializzazione dei suoi buttons viene fatta a runtime
+        // poichè la lista dei progetti può variare ogni volta
         ProjectsListPanel projectsListPanel = this.view.getProjectsListPanel();
 
         // dentro ProjectsDetailsPanel posso vedere i dettagli di un singolo progetto
         ProjectDetailsPanel projectDetailsPanel = this.view.getProjectDetailsPanel();
+        projectDetailsPanel.getCancelButton().addActionListener(e -> this.cancelProject());
+        projectDetailsPanel.getCardsButton().addActionListener(e -> this.showProjectCards());
+        projectDetailsPanel.getMembersButton().addActionListener(e -> this.showProjectMembers());
+        projectDetailsPanel.getChatButton().addActionListener(e -> this.showProjectChat());
 
     }
 
@@ -137,49 +146,76 @@ public class LoggedController {
     }
 
     private void showProjectDetails(String projectName) {
+        // voglio visualizzare il progetto projectName
+        this.selectedProject = projectName;
+
         ProjectDetailsPanel detailsPanel = this.view.getProjectDetailsPanel();
 
-        // todo controllers
+        // aggiorno UI
+        detailsPanel.getProjectNameLabel().setText(this.selectedProject);
+        this.updateUI(detailsPanel);
 
-        detailsPanel.setUI(projectName);
         this.showCard(this.view, LoggedUI.PROJECT_DETAILS_PANEL);
     }
 
-    // visualizza cards dentro ProjectDetails todo
+    // visualizza cards dentro ProjectDetails
 
     private void showProjectCards() {
+        ProjectDetailsPanel detailsPanel = this.view.getProjectDetailsPanel();
 
+        this.showCard(detailsPanel, ProjectDetailsPanel.CARDS_PANEL);
     }
 
     private void showProjectMembers() {
+        ProjectDetailsPanel detailsPanel = this.view.getProjectDetailsPanel();
 
+        this.showCard(detailsPanel, ProjectDetailsPanel.MEMBERS_PANEL);
     }
 
     private void showCardDetails() {
+        ProjectDetailsPanel detailsPanel = this.view.getProjectDetailsPanel();
 
+        this.showCard(detailsPanel, ProjectDetailsPanel.CARD_DETAILS_PANEL);
     }
 
     private void showProjectChat() {
-
-    }
-
-    private void readChat() {
-        // seleziona nome progetto todo
         try {
-            String chatAddress = this.model.readChat("a");
+            String chatAddress = this.model.readChat(this.selectedProject);
+            /**
+             * se chatAddress non nullo, istanzio un thread che si mette in ascolto dei messaggi
+             * in arrivo su quella chat
+             * inoltre, devo creare la card associata a quella specifica chat
+             */
             if (chatAddress != null) {
-                ChatMessageList chatMessageList = new ChatMessageList();
+                // creo card
+                ChatCard chatCard = new ChatCard();
+
+                // thread da mandare in esecuzione
                 ChatReaderControllerTask chatReaderControllerTask = new ChatReaderControllerTask(
                         this.model.getUsername(),
                         this.model.getMulticastSocket(),
                         chatAddress,
                         CommunicationProtocol.UDP_CHAT_PORT,
-                        chatMessageList
+                        chatCard
                 );
                 ExecutorService threadPool = this.model.getThreadPool();
                 threadPool.execute(chatReaderControllerTask);
+
+                // aggiungo card il cui nome è il nome del progetto
+                ChatPanel chatPanel = this.view.getProjectDetailsPanel().getChatPanel();
+                chatPanel.addChatCard(this.selectedProject, chatCard);
             }
-            // visualizza quella card todo
+
+            // visualizza quella card
+
+            ProjectDetailsPanel detailsPanel = this.view.getProjectDetailsPanel();
+            ChatPanel chatPanel = detailsPanel.getChatPanel();
+
+            // visualizzo chat del progetto selectedProject
+            this.showCard(chatPanel, this.selectedProject);
+
+            // visualizzo pannello chat
+            this.showCard(detailsPanel, ProjectDetailsPanel.CHAT_PANEL);
         } catch (UnknownHostException | CommunicationException e) {
             Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
         } catch (ProjectNotExistsException e) {
@@ -198,7 +234,7 @@ public class LoggedController {
         }
         try {
             this.model.createProject(projectName);
-            Utils.showInfoMessageDialog(UIMessages.PROJECT_SUCCESS);
+            Utils.showInfoMessageDialog(UIMessages.PROJECT_CREATE_SUCCESS);
             // resetto campo
             homePanel.getProjectNameField().setText("");
         } catch (CommunicationException e) {
@@ -209,6 +245,24 @@ public class LoggedController {
             Utils.showErrorMessageDialog(UIMessages.PROJECT_ALREADY_EXISTS);
         } catch (CharactersNotAllowedException e) {
             Utils.showErrorMessageDialog(UIMessages.CHARACTERS_NOT_ALLOWED);
+        }
+    }
+
+    private void cancelProject() {
+        try {
+            this.model.cancelProject(this.selectedProject);
+            Utils.showInfoMessageDialog(UIMessages.PROJECT_CANCEL_SUCCESS);
+
+            // torno alla lista dei miei progetti
+            this.showProjectsList();
+        } catch (CommunicationException e) {
+            Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
+        } catch (ProjectNotExistsException e) {
+            Utils.showErrorMessageDialog(UIMessages.PROJECT_NOT_EXISTS);
+        } catch (UnauthorizedUserException e) {
+            Utils.showErrorMessageDialog(UIMessages.UNAUTHORIZED_USER);
+        } catch (ProjectNotCancelableException e) {
+            Utils.showErrorMessageDialog(UIMessages.PROJECT_NOT_CANCELABLE);
         }
     }
 
@@ -230,7 +284,7 @@ public class LoggedController {
 
     // visualizza la card cardName all'interno del panel hostPanel
     private void showCard(HostsCardsContainer hostPanel, String cardName) {
-        hostPanel.getCardLayout().show(this.view.getContainerPanel(), cardName);
+        hostPanel.getCardLayout().show(hostPanel.getCardContainer(), cardName);
     }
 
     // torna alla schermata di login

@@ -13,7 +13,9 @@ import java.awt.*;
  */
 public class LoggedUI extends JPanel implements HostsCardsContainer {
     private static final int WIDTH = 1000; // larghezza del panel
-    private static final int HEIGHT = 600; // altezza del panel
+    private static final int HEIGHT = 650; // altezza del panel
+
+    // nomi delle card
     public static final String HOME_PANEL = "home";
     public static final String USERS_PANEL = "users";
     public static final String PROJECTS_PANEL = "projectsList";
@@ -21,7 +23,7 @@ public class LoggedUI extends JPanel implements HostsCardsContainer {
 
     // componenti
     private final JPanel buttonsPanel;
-    private final JPanel containerPanel;
+    private final JPanel cardContainer;
 
     // buttons
     private final JButton homeButton;
@@ -59,26 +61,26 @@ public class LoggedUI extends JPanel implements HostsCardsContainer {
 
         // containerPanel ha layout CardLayout
         cardLayout = new CardLayout();
-        containerPanel = new JPanel(cardLayout);
+        cardContainer = new JPanel(cardLayout);
 
         // aggiungo panels al container
         homePanel = new HomePanel();
-        containerPanel.add(homePanel, HOME_PANEL);
+        cardContainer.add(homePanel, HOME_PANEL);
         usersPanel = new UsersPanel();
-        containerPanel.add(usersPanel, USERS_PANEL);
+        cardContainer.add(usersPanel, USERS_PANEL);
         projectsListPanel = new ProjectsListPanel();
-        containerPanel.add(projectsListPanel, PROJECTS_PANEL);
+        cardContainer.add(projectsListPanel, PROJECTS_PANEL);
         projectDetailsPanel = new ProjectDetailsPanel();
-        containerPanel.add(projectDetailsPanel, PROJECT_DETAILS_PANEL);
+        cardContainer.add(projectDetailsPanel, PROJECT_DETAILS_PANEL);
 
         // aggiungo pannelli principali
         this.add(buttonsPanel, BorderLayout.NORTH);
-        this.add(containerPanel);
+        this.add(cardContainer);
     }
 
     @Override
-    public JPanel getContainerPanel() {
-        return containerPanel;
+    public JPanel getCardContainer() {
+        return cardContainer;
     }
 
     @Override

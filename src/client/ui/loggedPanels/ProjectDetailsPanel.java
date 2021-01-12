@@ -15,6 +15,7 @@ import java.awt.*;
  * Pannello di dettaglio di un progetto
  */
 public class ProjectDetailsPanel extends JPanel implements HostsCardsContainer {
+    // nomi delle cards
     public static final String MEMBERS_PANEL = "members";
     public static final String CARDS_PANEL = "cards";
     public static final String CARD_DETAILS_PANEL = "cardDetails";
@@ -23,7 +24,7 @@ public class ProjectDetailsPanel extends JPanel implements HostsCardsContainer {
     // componenti
     private final JPanel headerPanel;
     private final JPanel buttonsPanel;
-    private final JPanel containerPanel;
+    private final JPanel cardContainer;
 
     // labels
     private final JLabel projectNameLabel;
@@ -47,14 +48,19 @@ public class ProjectDetailsPanel extends JPanel implements HostsCardsContainer {
         this.setLayout(new BorderLayout());
 
         // headerPanel ha layout FlowLayout
-        headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel = new JPanel(new FlowLayout());
         headerPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         // aggiungo label e buttons a headerPanel
         projectNameLabel = new JLabel();
+        Font font = projectNameLabel.getFont();
+        int newSize = (int) (font.getSize() * 1.3);
+        projectNameLabel.setFont(new Font(font.getName(), Font.BOLD, newSize));
         cancelButton = new JButton("Cancel project");
         headerPanel.add(projectNameLabel);
         headerPanel.add(cancelButton);
+
+        JPanel buttonsAndCardContainer = new JPanel(new BorderLayout());
 
         // button panel ha layout FlowLayout
         buttonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -70,25 +76,25 @@ public class ProjectDetailsPanel extends JPanel implements HostsCardsContainer {
 
         // containerPanel ha layout CardLayout
         cardLayout = new CardLayout();
-        containerPanel = new JPanel(cardLayout);
+        cardContainer = new JPanel(cardLayout);
 
         // aggiungo panels al container
         projectMembersPanel = new ProjectMembersPanel();
         projectCardsPanel = new ProjectCardsPanel();
         cardDetailsPanel = new CardDetailsPanel();
         chatPanel = new ChatPanel();
-        containerPanel.add(projectMembersPanel, MEMBERS_PANEL);
-        containerPanel.add(projectCardsPanel, CARDS_PANEL);
-        containerPanel.add(cardDetailsPanel, CARD_DETAILS_PANEL);
-        containerPanel.add(chatPanel, CHAT_PANEL);
+        cardContainer.add(projectMembersPanel, MEMBERS_PANEL);
+        cardContainer.add(projectCardsPanel, CARDS_PANEL);
+        cardContainer.add(cardDetailsPanel, CARD_DETAILS_PANEL);
+        cardContainer.add(chatPanel, CHAT_PANEL);
+
+        // aggiungo buttonsPanel e cardContainer
+        buttonsAndCardContainer.add(buttonsPanel, BorderLayout.NORTH);
+        buttonsAndCardContainer.add(cardContainer);
 
         // aggiungo pannelli principali
-        this.add(buttonsPanel, BorderLayout.NORTH);
-        this.add(containerPanel);
-    }
-
-    public void setUI(String projectName) {
-
+        this.add(headerPanel, BorderLayout.NORTH);
+        this.add(buttonsAndCardContainer);
     }
 
     @Override
@@ -97,7 +103,48 @@ public class ProjectDetailsPanel extends JPanel implements HostsCardsContainer {
     }
 
     @Override
-    public JPanel getContainerPanel() {
-        return containerPanel;
+    public JPanel getCardContainer() {
+        return cardContainer;
     }
+
+    public void setProjectNameLabel(String projectName) {
+        this.projectNameLabel.setText(projectName);
+    }
+
+    public JLabel getProjectNameLabel() {
+        return projectNameLabel;
+    }
+
+    public JButton getCancelButton() {
+        return cancelButton;
+    }
+
+    public JButton getMembersButton() {
+        return membersButton;
+    }
+
+    public JButton getCardsButton() {
+        return cardsButton;
+    }
+
+    public JButton getChatButton() {
+        return chatButton;
+    }
+
+    public ProjectMembersPanel getProjectMembersPanel() {
+        return projectMembersPanel;
+    }
+
+    public ProjectCardsPanel getProjectCardsPanel() {
+        return projectCardsPanel;
+    }
+
+    public CardDetailsPanel getCardDetailsPanel() {
+        return cardDetailsPanel;
+    }
+
+    public ChatPanel getChatPanel() {
+        return chatPanel;
+    }
+
 }

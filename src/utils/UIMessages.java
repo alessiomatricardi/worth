@@ -29,7 +29,7 @@ public class UIMessages {
     // messaggio "caratteri non consentiti"
     public static final String CHARACTERS_NOT_ALLOWED =
             "We're sorry, but this field contains some not allowed characters.\n" +
-                    "It should contain only alphanumeric characters and _";
+                    "It should contain only lower alphanumeric characters and _";
 
     //
     public static final String EMPTY_FIELD = "Some fields seems to be empty or blank.\n";
@@ -88,6 +88,9 @@ public class UIMessages {
     public static final String LOGOUT_MESSAGE = "Do you want to log out from Worth?";
 
     // messaggio "progetto creato con successo"
-    public static final String PROJECT_SUCCESS = "Project successfully created.";
+    public static final String PROJECT_CREATE_SUCCESS = "Project successfully created.";
+
+    // messaggio "progetto creato con successo"
+    public static final String PROJECT_CANCEL_SUCCESS = "Project successfully cancelled.";
 
 }

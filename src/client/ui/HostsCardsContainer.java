@@ -25,6 +25,6 @@ public interface HostsCardsContainer {
     /**
      * Restituisce il container che ospita le cards
      */
-    JPanel getContainerPanel();
+    JPanel getCardContainer();
 
 }
