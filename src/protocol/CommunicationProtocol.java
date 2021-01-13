@@ -1,5 +1,7 @@
 package worth.protocol;
 
+import java.time.ZoneId;
+
 /**
  * Created by alessiomatricardi on 03/01/21
  *
@@ -41,6 +43,9 @@ public abstract class CommunicationProtocol {
 
     // REGEX username, solo a-z, 0-9, _ consentiti
     public static final String STRING_REGEX = "^[a-z0-9_]+$";
+
+    // ZoneId utilizzato
+    public static final ZoneId ZONE_ID = ZoneId.of("Europe/Rome");
 
     /**
     * COMANDI E CODICI DI RISPOSTA DURANTE LA COMUNICAZIONE TCP

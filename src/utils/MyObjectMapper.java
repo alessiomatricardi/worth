@@ -2,6 +2,7 @@ package worth.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.text.SimpleDateFormat;
 
@@ -19,6 +20,7 @@ public class MyObjectMapper extends ObjectMapper {
         this.enable(SerializationFeature.INDENT_OUTPUT);
 
         // formattazione data
+        this.registerModule(new JavaTimeModule());
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
         this.setDateFormat(dateFormat);
 

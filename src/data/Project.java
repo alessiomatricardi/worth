@@ -3,9 +3,12 @@ package worth.data;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import worth.exceptions.*;
+import worth.protocol.CommunicationProtocol;
 import worth.utils.MulticastAddressManager;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +22,7 @@ import java.util.Map;
 public class Project implements Serializable {
     private String name;
     private List<String> members;
+    private LocalDateTime creationDateTime;
     /**
      * l'indirizzo della chat multicast non viene mai serializzato/deserializzato
      * quando il progetto viene recuperato dal server, gli viene assegnato un nuovo indirizzo
@@ -39,6 +43,7 @@ public class Project implements Serializable {
         this.name = projectName;
         this.members = new ArrayList<>();
         this.members.add(creator);
+        this.creationDateTime = LocalDateTime.now(CommunicationProtocol.ZONE_ID);
         this.chatAddress = MulticastAddressManager.getAddress();
         this.statusLists = new HashMap<>();
         CardStatus[] values = CardStatus.values();
@@ -78,6 +83,10 @@ public class Project implements Serializable {
 
     public List<String> getMembers() {
         return this.members;
+    }
+
+    public LocalDateTime getCreationDateTime() {
+        return this.creationDateTime;
     }
 
     public String getChatAddress() {

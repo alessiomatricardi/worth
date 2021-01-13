@@ -71,10 +71,11 @@ public interface TCPOperations {
      * @throws UnauthorizedUserException se non si hanno le autorizzazioni necessarie
      * @throws UserAlreadyPresentException se l'utente fa già parte del progetto
      * @throws UserNotExistsException se l'utente non esiste
+     * @throws IOException se ci sono errori nel salvataggio del progetto
      *
      */
     void addMember(String projectName, String username, String whoRequest)
-            throws ProjectNotExistsException, UnauthorizedUserException, UserAlreadyPresentException, UserNotExistsException;
+            throws ProjectNotExistsException, UnauthorizedUserException, UserAlreadyPresentException, UserNotExistsException, IOException;
 
     /**
      * Mostra i membri del progetto

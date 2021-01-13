@@ -23,6 +23,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,6 +45,7 @@ public class ClientModel {
     private Map<String, String> projectChatAddresses;   // indirizzi multicast dei progetti
     private ExecutorService threadPool;                 // threadpool per servizio di lettura chat
     private MulticastSocket multicastSocket;            // socket per chat multicast
+    private LocalDateTime lastListProjectsCall;         // l'ultima volta che ho chiamato listProjects
 
     // predispone la connessione del client con il server
     public ClientModel() throws IOException {
@@ -166,6 +168,9 @@ public class ClientModel {
 
         // shutdown threads lettori delle chat
         shutdownThreadPool();
+
+        // invalido lista degli indirizzi multicast
+        this.projectChatAddresses = new HashMap<>();
     }
 
     public Map<String, UserStatus> listUsers() {
@@ -203,6 +208,38 @@ public class ClientModel {
                     new TypeReference<List<Project>>() {
                     }
             );
+
+            /*
+            * invalido dalla map degli indirizzi multicast
+            * 1) tutti i progetti eliminati
+            * 2) tutti i progetti aventi lo stesso nome di progetti eliminati
+            * di cui l'utente faceva parte
+            *
+            * Nel secondo caso, si tratta di progetti creati dopo l'ultima volta
+            * che ho chiamato questo metodo
+            */
+            List<String> projectNames = new ArrayList<>();
+            for (Project project : projectList) {
+                projectNames.add(project.getName());
+            }
+            Set<String> addressKeys = this.projectChatAddresses.keySet();
+            for (String addressKey : addressKeys) {
+                int index = projectNames.indexOf(addressKey);
+                if (index == -1) { // caso 1
+                    this.projectChatAddresses.replace(addressKey, null);
+                } else {
+                    // caso 2
+                    if (this.lastListProjectsCall != null) {
+                        Project project = projectList.get(index);
+                        if (this.lastListProjectsCall.isBefore(project.getCreationDateTime())) {
+                            this.projectChatAddresses.replace(addressKey, null);
+                        }
+                    }
+                }
+            }
+
+            // aggiorno variabile di ultima chiamata
+            this.lastListProjectsCall = LocalDateTime.now(CommunicationProtocol.ZONE_ID);
 
             return projectList;
         } catch (IOException e) {
@@ -527,6 +564,8 @@ public class ClientModel {
     }
 
     /**
+     * Invia una richiesta TCP al server e attende la risposta da quest'ultimo
+     *
      * @param requestMessage messaggio da inviare al server
      *
      * @return messaggio di risposta dal server

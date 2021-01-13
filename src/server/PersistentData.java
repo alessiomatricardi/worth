@@ -215,7 +215,7 @@ public class PersistentData implements Registration, TCPOperations {
 
     @Override
     public void addMember(String projectName, String username, String whoRequest)
-            throws ProjectNotExistsException, UnauthorizedUserException, UserAlreadyPresentException, UserNotExistsException {
+            throws ProjectNotExistsException, UnauthorizedUserException, UserAlreadyPresentException, UserNotExistsException, IOException {
         Project project;
         if ((project = this.projects.get(projectName)) == null)
             throw new ProjectNotExistsException();
@@ -224,6 +224,8 @@ public class PersistentData implements Registration, TCPOperations {
         if (!this.users.containsKey(username))
             throw new UserNotExistsException();
         project.addMember(username);
+
+        this.storeProject(project);
     }
 
     @Override

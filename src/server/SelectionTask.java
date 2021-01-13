@@ -472,32 +472,30 @@ public class SelectionTask implements Runnable {
 
                                 String projectName = arguments.get(0);
                                 try {
+                                    // salvo il suo indirizzo multicast
+                                    String chatAddress = data.getProjectChatAddress(projectName);
+
+                                    // invoco cancellazione
                                     data.cancelProject(projectName, username);
 
                                     // il server avvisa tutti gli utenti nella chat di progetto
                                     // che il progetto è stato cancellato
-                                    try {
-                                        String chatAddress = data.getProjectChatAddress(projectName);
-                                        InetAddress group = InetAddress.getByName(chatAddress);
-                                        MulticastSocket multicastSocket = new MulticastSocket(CommunicationProtocol.UDP_CHAT_PORT);
+                                    InetAddress group = InetAddress.getByName(chatAddress);
+                                    MulticastSocket multicastSocket = new MulticastSocket(CommunicationProtocol.UDP_CHAT_PORT);
 
-                                        UDPMessage udpMessage = new UDPMessage(
-                                                CommunicationProtocol.SYSTEM_NAME,
-                                                CommunicationProtocol.UDP_TERMINATE_MSG,
-                                                true
-                                        );
-                                        byte[] byteMessage = this.mapper.writeValueAsBytes(udpMessage);
-                                        DatagramPacket packet = new DatagramPacket(
-                                                byteMessage,
-                                                byteMessage.length,
-                                                group,
-                                                CommunicationProtocol.UDP_CHAT_PORT
-                                        );
-                                        multicastSocket.send(packet);
-
-                                    } catch (ProjectNotExistsException e) {
-                                        e.printStackTrace();
-                                    }
+                                    UDPMessage udpMessage = new UDPMessage(
+                                            CommunicationProtocol.SYSTEM_NAME,
+                                            CommunicationProtocol.UDP_TERMINATE_MSG,
+                                            true
+                                    );
+                                    byte[] byteMessage = this.mapper.writeValueAsBytes(udpMessage);
+                                    DatagramPacket packet = new DatagramPacket(
+                                            byteMessage,
+                                            byteMessage.length,
+                                            group,
+                                            CommunicationProtocol.UDP_CHAT_PORT
+                                    );
+                                    multicastSocket.send(packet);
 
                                 } catch (ProjectNotExistsException e) {
                                     responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;

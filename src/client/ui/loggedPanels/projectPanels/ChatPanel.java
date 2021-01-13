@@ -13,23 +13,33 @@ import java.util.Map;
 public class ChatPanel extends JPanel implements HostsCardsContainer {
     // pannelli dove vengono visualizzati i messaggi (uno per chat = uno per progetto)
     // messagePanels.get(nomeProgetto) = pannello chat del progetto
-    Map<String, ChatCard> messageCards;
+    private Map<String, ChatLog> messageCards;
+
+    private CardLayout cardLayout;
+    private JPanel cardContainer;
 
     public ChatPanel() {
         this.messageCards = new HashMap<>();
+
+        // gestione delle Card ChatLog
+        cardLayout = new CardLayout();
+        cardContainer = new JPanel(cardLayout);
     }
 
-    public void addChatCard(String projectName, ChatCard chatCard) {
-        this.messageCards.put(projectName, chatCard);
+    public void addChatLog(String projectName, ChatLog chatLog) {
+        // inserisco nella map la correlazione <nome progetto, chat log del progetto>
+        this.messageCards.put(projectName, chatLog);
+        // inserisco nel container questa nuova Card
+        this.cardContainer.add(chatLog, projectName);
     }
 
     @Override
     public CardLayout getCardLayout() {
-        return null;
+        return cardLayout;
     }
 
     @Override
     public JPanel getCardContainer() {
-        return null;
+        return cardContainer;
     }
 }

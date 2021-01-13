@@ -5,7 +5,7 @@ import worth.client.ui.HostsCardsContainer;
 import worth.client.ui.LoggedUI;
 import worth.client.ui.WorthFrame;
 import worth.client.ui.loggedPanels.*;
-import worth.client.ui.loggedPanels.projectPanels.ChatCard;
+import worth.client.ui.loggedPanels.projectPanels.ChatLog;
 import worth.client.ui.loggedPanels.ProjectDetailsPanel;
 import worth.client.ui.loggedPanels.projectPanels.ChatPanel;
 import worth.client.ui.loggedPanels.projectPanels.MembersPanel;
@@ -86,8 +86,8 @@ public class LoggedController {
         projectDetailsPanel.getCancelButton().addActionListener(e -> this.cancelProject());
         projectDetailsPanel.getCardsButton().addActionListener(e -> this.showProjectCards());
         projectDetailsPanel.getMembersButton().addActionListener(e -> this.showProjectMembers());
-        projectDetailsPanel.getChatButton().addActionListener(e -> this.showProjectChat());
-        projectDetailsPanel.getAddCardButton().addActionListener(e -> this.showAddCardPanel());
+        projectDetailsPanel.getChatButton().addActionListener(e -> this.showChat());
+        projectDetailsPanel.getAddCardButton().addActionListener(e -> this.showAddCard());
 
         // azioni possibili in panel dentro ProjectDetailsPanel
 
@@ -209,21 +209,22 @@ public class LoggedController {
         this.showCard(detailsPanel, ProjectDetailsPanel.CARD_DETAILS_PANEL);
     }
 
-    private void showAddCardPanel() {
+    private void showAddCard() {
 
     }
 
-    private void showProjectChat() {
+    private void showChat() {
         try {
             String chatAddress = this.model.readChat(this.selectedProject);
-            /**
+
+            /*
              * se chatAddress non nullo, istanzio un thread che si mette in ascolto dei messaggi
              * in arrivo su quella chat
              * inoltre, devo creare la card associata a quella specifica chat
              */
             if (chatAddress != null) {
                 // creo card
-                ChatCard chatCard = new ChatCard();
+                ChatLog chatLog = new ChatLog();
 
                 // thread da mandare in esecuzione
                 ChatReaderControllerTask chatReaderControllerTask = new ChatReaderControllerTask(
@@ -231,14 +232,14 @@ public class LoggedController {
                         this.model.getMulticastSocket(),
                         chatAddress,
                         CommunicationProtocol.UDP_CHAT_PORT,
-                        chatCard
+                        chatLog
                 );
                 ExecutorService threadPool = this.model.getThreadPool();
                 threadPool.execute(chatReaderControllerTask);
 
                 // aggiungo card il cui nome è il nome del progetto
                 ChatPanel chatPanel = this.view.getProjectDetailsPanel().getChatPanel();
-                chatPanel.addChatCard(this.selectedProject, chatCard);
+                chatPanel.addChatLog(this.selectedProject, chatLog);
             }
 
             // visualizza quella card
@@ -260,6 +261,8 @@ public class LoggedController {
         }
     }
 
+    // altre operazioni
+
     private void createProject() {
         HomePanel homePanel = this.view.getHomePanel();
         String projectName = homePanel.getProjectNameField().getText();
@@ -270,6 +273,7 @@ public class LoggedController {
         try {
             this.model.createProject(projectName);
             Utils.showInfoMessageDialog(UIMessages.PROJECT_CREATE_SUCCESS);
+
             // resetto campo
             homePanel.getProjectNameField().setText("");
         } catch (CommunicationException e) {
@@ -310,6 +314,7 @@ public class LoggedController {
 
             Utils.showInfoMessageDialog(UIMessages.ADD_MEMBER_SUCCESS);
 
+            // refresh UI membri progetto
             this.showProjectMembers();
         } catch (CommunicationException e) {
             Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
@@ -327,6 +332,8 @@ public class LoggedController {
     private void logout() {
         try {
             this.model.logout();
+
+            // torno a pannello di login
             this.changeContext();
         } catch (UserNotExistsException e) {
             Utils.showErrorMessageDialog(UIMessages.USERNAME_NOT_EXISTS);

@@ -2,7 +2,7 @@ package worth.client.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import worth.client.ui.loggedPanels.projectPanels.ChatCard;
+import worth.client.ui.loggedPanels.projectPanels.ChatLog;
 import worth.protocol.CommunicationProtocol;
 import worth.protocol.UDPMessage;
 
@@ -21,18 +21,18 @@ public class ChatReaderControllerTask implements Runnable {
     private final MulticastSocket socket;           // socket
     private final InetAddress group;                // indirizzo multicast
     private final int port;                         // porta dove ricevere i messaggi
-    private final ChatCard chatCard;  // dove aggiungere i messaggi
+    private final ChatLog chatLog;  // dove aggiungere i messaggi
 
     public ChatReaderControllerTask(String user,
                                     MulticastSocket socket,
                                     String address, int port,
-                                    ChatCard chatCard
+                                    ChatLog chatLog
     ) throws UnknownHostException {
         this.applicationUser = user;
         this.socket = socket;
         this.group = InetAddress.getByName(address);
         this.port = port;
-        this.chatCard = chatCard;
+        this.chatLog = chatLog;
     }
 
     @Override
