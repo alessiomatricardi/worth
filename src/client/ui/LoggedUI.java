@@ -52,7 +52,7 @@ public class LoggedUI extends JPanel implements HostsCardsContainer {
         // aggiungo buttons a buttonsPanel
         homeButton = new JButton("Home");
         userListButton = new JButton("Show users");
-        projectsListButton = new JButton("Show my projects");
+        projectsListButton = new JButton("Your projects");
         logoutButton = new JButton("Logout");
         buttonsPanel.add(homeButton);
         buttonsPanel.add(userListButton);

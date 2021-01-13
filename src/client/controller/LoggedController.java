@@ -8,6 +8,7 @@ import worth.client.ui.loggedPanels.*;
 import worth.client.ui.loggedPanels.projectPanels.ChatCard;
 import worth.client.ui.loggedPanels.ProjectDetailsPanel;
 import worth.client.ui.loggedPanels.projectPanels.ChatPanel;
+import worth.client.ui.loggedPanels.projectPanels.MembersPanel;
 import worth.data.Project;
 import worth.data.UserStatus;
 import worth.exceptions.*;
@@ -86,6 +87,12 @@ public class LoggedController {
         projectDetailsPanel.getCardsButton().addActionListener(e -> this.showProjectCards());
         projectDetailsPanel.getMembersButton().addActionListener(e -> this.showProjectMembers());
         projectDetailsPanel.getChatButton().addActionListener(e -> this.showProjectChat());
+        projectDetailsPanel.getAddCardButton().addActionListener(e -> this.showAddCardPanel());
+
+        // azioni possibili in panel dentro ProjectDetailsPanel
+
+        MembersPanel membersPanel = projectDetailsPanel.getMembersPanel();
+        membersPanel.getAddMemberButton().addActionListener(e -> this.addMember());
 
     }
 
@@ -155,6 +162,9 @@ public class LoggedController {
         detailsPanel.getProjectNameLabel().setText(this.selectedProject);
         this.updateUI(detailsPanel);
 
+        // mostro card dei membri
+        this.showProjectMembers();
+
         this.showCard(this.view, LoggedUI.PROJECT_DETAILS_PANEL);
     }
 
@@ -167,15 +177,40 @@ public class LoggedController {
     }
 
     private void showProjectMembers() {
-        ProjectDetailsPanel detailsPanel = this.view.getProjectDetailsPanel();
+        try {
+            List<String> members = this.model.showMembers(this.selectedProject);
+            List<JLabel> labels = new ArrayList<>();
 
-        this.showCard(detailsPanel, ProjectDetailsPanel.MEMBERS_PANEL);
+            for (String member : members) {
+                labels.add(new JLabel(member));
+            }
+
+            ProjectDetailsPanel detailsPanel = this.view.getProjectDetailsPanel();
+            MembersPanel membersPanel = detailsPanel.getMembersPanel();
+
+            // modifica e aggiorna UI
+            membersPanel.setUI(labels);
+            this.updateUI(membersPanel);
+
+            // mostra
+            this.showCard(detailsPanel, ProjectDetailsPanel.MEMBERS_PANEL);
+        } catch (CommunicationException e) {
+            Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
+        } catch (ProjectNotExistsException e) {
+            Utils.showErrorMessageDialog(UIMessages.PROJECT_NOT_EXISTS);
+        } catch (UnauthorizedUserException e) {
+            Utils.showErrorMessageDialog(UIMessages.UNAUTHORIZED_USER);
+        }
     }
 
     private void showCardDetails() {
         ProjectDetailsPanel detailsPanel = this.view.getProjectDetailsPanel();
 
         this.showCard(detailsPanel, ProjectDetailsPanel.CARD_DETAILS_PANEL);
+    }
+
+    private void showAddCardPanel() {
+
     }
 
     private void showProjectChat() {
@@ -263,6 +298,29 @@ public class LoggedController {
             Utils.showErrorMessageDialog(UIMessages.UNAUTHORIZED_USER);
         } catch (ProjectNotCancelableException e) {
             Utils.showErrorMessageDialog(UIMessages.PROJECT_NOT_CANCELABLE);
+        }
+    }
+
+    private void addMember() {
+        MembersPanel membersPanel = this.view.getProjectDetailsPanel().getMembersPanel();
+        String userToAdd = membersPanel.getAddMemberField().getText();
+
+        try {
+            this.model.addMember(this.selectedProject, userToAdd);
+
+            Utils.showInfoMessageDialog(UIMessages.ADD_MEMBER_SUCCESS);
+
+            this.showProjectMembers();
+        } catch (CommunicationException e) {
+            Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
+        } catch (ProjectNotExistsException e) {
+            Utils.showErrorMessageDialog(UIMessages.PROJECT_NOT_EXISTS);
+        } catch (UnauthorizedUserException e) {
+            Utils.showErrorMessageDialog(UIMessages.UNAUTHORIZED_USER);
+        } catch (UserAlreadyPresentException e) {
+            Utils.showErrorMessageDialog(UIMessages.USER_ALREADY_PRESENT);
+        } catch (UserNotExistsException e) {
+            Utils.showErrorMessageDialog(UIMessages.USERNAME_NOT_EXISTS);
         }
     }
 

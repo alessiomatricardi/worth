@@ -93,4 +93,7 @@ public class UIMessages {
     // messaggio "progetto creato con successo"
     public static final String PROJECT_CANCEL_SUCCESS = "Project successfully cancelled.";
 
+    // messaggio "membro aggiunto con successo"
+    public static final String ADD_MEMBER_SUCCESS = "Member successfully added.";
+
 }
