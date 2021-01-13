@@ -286,7 +286,7 @@ public class SelectionTask implements Runnable {
 
                                 String projectName = arguments.get(0);
                                 try {
-                                    List<String> cards = data.showCards(projectName, username);
+                                    Map<CardStatus, List<String>> cards = data.showCards(projectName, username);
                                     responseBody = this.mapper.writeValueAsString(cards);
                                 } catch (ProjectNotExistsException e) {
                                     responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
@@ -309,8 +309,9 @@ public class SelectionTask implements Runnable {
                                 String cardName = arguments.get(1);
 
                                 try {
-                                    Card card = data.showCard(projectName, cardName, username);
-                                    responseBody = this.mapper.writeValueAsString(card);
+                                    CardNoMovs card = data.showCard(projectName, cardName, username);
+                                    // serialize solo elementi interfaccia
+                                    responseBody = this.mapper.writerFor(CardNoMovs.class).writeValueAsString(card);
                                 } catch (ProjectNotExistsException e) {
                                     responseCode = CommunicationProtocol.PROJECT_NOT_EXISTS;
                                 } catch (UnauthorizedUserException e) {

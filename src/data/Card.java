@@ -1,13 +1,17 @@
 package worth.data;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by alessiomatricardi on 02/01/21
+ *
+ * Card di un progetto
  */
-public class Card implements Serializable {
+public class Card implements Serializable, CardNoMovs {
     private String name;
     private String description;
     private CardStatus status;
@@ -20,14 +24,20 @@ public class Card implements Serializable {
         this.movements = new ArrayList<>();
     }
 
+    @JsonCreator
+    private Card() {}
+
+    @Override
     public String getName() {
         return this.name;
     }
 
+    @Override
     public String getDescription() {
         return this.description;
     }
 
+    @Override
     public CardStatus getStatus() {
         return this.status;
     }

@@ -5,12 +5,9 @@ import worth.client.ui.HostsCardsContainer;
 import worth.client.ui.LoggedUI;
 import worth.client.ui.WorthFrame;
 import worth.client.ui.loggedPanels.*;
-import worth.client.ui.loggedPanels.projectPanels.ChatLog;
+import worth.client.ui.loggedPanels.projectPanels.*;
 import worth.client.ui.loggedPanels.ProjectDetailsPanel;
-import worth.client.ui.loggedPanels.projectPanels.ChatPanel;
-import worth.client.ui.loggedPanels.projectPanels.MembersPanel;
-import worth.data.Project;
-import worth.data.UserStatus;
+import worth.data.*;
 import worth.exceptions.*;
 import worth.protocol.CommunicationProtocol;
 import worth.utils.UIMessages;
@@ -18,10 +15,7 @@ import worth.utils.Utils;
 
 import javax.swing.*;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -84,15 +78,30 @@ public class LoggedController {
         // dentro ProjectsDetailsPanel posso vedere i dettagli di un singolo progetto
         ProjectDetailsPanel projectDetailsPanel = this.view.getProjectDetailsPanel();
         projectDetailsPanel.getCancelButton().addActionListener(e -> this.cancelProject());
-        projectDetailsPanel.getCardsButton().addActionListener(e -> this.showProjectCards());
-        projectDetailsPanel.getMembersButton().addActionListener(e -> this.showProjectMembers());
+        projectDetailsPanel.getCardsButton().addActionListener(e -> this.showCards());
+        projectDetailsPanel.getMembersButton().addActionListener(e -> this.showMembers());
         projectDetailsPanel.getChatButton().addActionListener(e -> this.showChat());
         projectDetailsPanel.getAddCardButton().addActionListener(e -> this.showAddCard());
 
         // azioni possibili in panel dentro ProjectDetailsPanel
 
+        // dentro MemberPanel posso aggiungere un membro al progetto
         MembersPanel membersPanel = projectDetailsPanel.getMembersPanel();
         membersPanel.getAddMemberButton().addActionListener(e -> this.addMember());
+
+        // dentro CardsPanel posso vedere la lista delle cards
+        CardsPanel cardsPanel = projectDetailsPanel.getCardsPanel();
+
+        // dentro AddCardPanel posso aggiungere una card al progetto
+        AddCardPanel addCardPanel = projectDetailsPanel.getAddCardPanel();
+        addCardPanel.getAddCardButton().addActionListener(e -> this.addCard());
+
+        // dentro CardDetailsPanel posso vedere i dettagli di una card e spostarla
+        CardDetailsPanel cardDetailsPanel = projectDetailsPanel.getCardDetailsPanel();
+        cardDetailsPanel.getMoveCardButton().addActionListener(e -> this.moveCard());
+
+        // dentro ChatPanel posso vedere la chat del progetto
+        // send message todo
 
     }
 
@@ -163,20 +172,53 @@ public class LoggedController {
         this.updateUI(detailsPanel);
 
         // mostro card dei membri
-        this.showProjectMembers();
+        this.showMembers();
 
         this.showCard(this.view, LoggedUI.PROJECT_DETAILS_PANEL);
     }
 
     // visualizza cards dentro ProjectDetails
 
-    private void showProjectCards() {
-        ProjectDetailsPanel detailsPanel = this.view.getProjectDetailsPanel();
+    private void showCards() {
+        try {
+            Map<CardStatus, List<String>> cards = this.model.showCards(this.selectedProject);
+            Map<CardStatus, List<JButton>> cardButtons = new HashMap<>();
 
-        this.showCard(detailsPanel, ProjectDetailsPanel.CARDS_PANEL);
+            // genero buttons con azioni
+            CardStatus[] values = CardStatus.values();
+            for (CardStatus status : values) {
+                List<String> statusList = cards.get(status);
+                List<JButton> buttonList = new ArrayList<>();
+                cardButtons.put(status, buttonList);
+                if (statusList != null) {
+                    for (String cardName : statusList) {
+                        // creo button
+                        JButton button = new JButton(cardName);
+                        // aggiungo azione
+                        button.addActionListener(e -> this.showCardDetails(cardName));
+                        // lo aggiungo alla lista
+                        buttonList.add(button);
+                    }
+                }
+            }
+
+            ProjectDetailsPanel detailsPanel = this.view.getProjectDetailsPanel();
+            CardsPanel cardsPanel = detailsPanel.getCardsPanel();
+
+            cardsPanel.setUI(cardButtons);
+            this.updateUI(cardsPanel);
+
+            this.showCard(detailsPanel, ProjectDetailsPanel.CARDS_PANEL);
+        } catch (CommunicationException e) {
+            Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
+        } catch (ProjectNotExistsException e) {
+            Utils.showErrorMessageDialog(UIMessages.PROJECT_NOT_EXISTS);
+        } catch (UnauthorizedUserException e) {
+            Utils.showErrorMessageDialog(UIMessages.UNAUTHORIZED_USER);
+        }
     }
 
-    private void showProjectMembers() {
+    private void showMembers() {
         try {
             List<String> members = this.model.showMembers(this.selectedProject);
             List<JLabel> labels = new ArrayList<>();
@@ -203,14 +245,39 @@ public class LoggedController {
         }
     }
 
-    private void showCardDetails() {
+    private void showCardDetails(String cardName) {
         ProjectDetailsPanel detailsPanel = this.view.getProjectDetailsPanel();
+        CardDetailsPanel cardDetailsPanel = detailsPanel.getCardDetailsPanel();
+        try {
+            CardNoMovs card = this.model.showCard(this.selectedProject, cardName);
 
-        this.showCard(detailsPanel, ProjectDetailsPanel.CARD_DETAILS_PANEL);
+            // modifico variabili interne (di utilità quando viene chiamato moveCard)
+            cardDetailsPanel.setCardName(cardName);
+            cardDetailsPanel.setFromStatus(card.getStatus());
+
+            // cerco di ottenere anche i movimenti della card
+            List<Movement> movements = this.model.getCardHistory(this.selectedProject, cardName);
+
+            // costruisco UI
+            //cardDetailsPanel.setUI(); todo
+            this.updateUI(cardDetailsPanel);
+
+            this.showCard(detailsPanel, ProjectDetailsPanel.CARD_DETAILS_PANEL);
+        } catch (CommunicationException e) {
+            Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
+        } catch (ProjectNotExistsException e) {
+            Utils.showErrorMessageDialog(UIMessages.PROJECT_NOT_EXISTS);
+        } catch (CardNotExistsException e) {
+            Utils.showErrorMessageDialog(UIMessages.CARD_NOT_EXISTS);
+        } catch (UnauthorizedUserException e) {
+            Utils.showErrorMessageDialog(UIMessages.UNAUTHORIZED_USER);
+        }
     }
 
     private void showAddCard() {
+        ProjectDetailsPanel detailsPanel = this.view.getProjectDetailsPanel();
 
+        this.showCard(detailsPanel, ProjectDetailsPanel.ADD_CARD_PANEL);
     }
 
     private void showChat() {
@@ -292,8 +359,8 @@ public class LoggedController {
             this.model.cancelProject(this.selectedProject);
             Utils.showInfoMessageDialog(UIMessages.PROJECT_CANCEL_SUCCESS);
 
-            // torno alla lista dei miei progetti
-            this.showProjectsList();
+            // torno alla home
+            this.showHome();
         } catch (CommunicationException e) {
             Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
         } catch (ProjectNotExistsException e) {
@@ -315,7 +382,7 @@ public class LoggedController {
             Utils.showInfoMessageDialog(UIMessages.ADD_MEMBER_SUCCESS);
 
             // refresh UI membri progetto
-            this.showProjectMembers();
+            this.showMembers();
         } catch (CommunicationException e) {
             Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
         } catch (ProjectNotExistsException e) {
@@ -324,8 +391,72 @@ public class LoggedController {
             Utils.showErrorMessageDialog(UIMessages.UNAUTHORIZED_USER);
         } catch (UserAlreadyPresentException e) {
             Utils.showErrorMessageDialog(UIMessages.USER_ALREADY_PRESENT);
+
+            // refresh UI membri progetto
+            this.showMembers();
         } catch (UserNotExistsException e) {
             Utils.showErrorMessageDialog(UIMessages.USERNAME_NOT_EXISTS);
+        }
+    }
+
+    private void addCard() {
+        ProjectDetailsPanel detailsPanel = this.view.getProjectDetailsPanel();
+        AddCardPanel addCardPanel = detailsPanel.getAddCardPanel();
+        String cardName = addCardPanel.getCardName().getText();
+        String description = addCardPanel.getCardDescription().getText();
+
+        try {
+            this.model.addCard(this.selectedProject, cardName, description);
+
+            addCardPanel.getCardName().setText("");
+            addCardPanel.getCardDescription().setText("");
+
+            // visualizzo lista cards aggiornata
+            this.showCards();
+        } catch (ProjectNotExistsException e) {
+            Utils.showErrorMessageDialog(UIMessages.PROJECT_NOT_EXISTS);
+        } catch (UnauthorizedUserException e) {
+            Utils.showErrorMessageDialog(UIMessages.UNAUTHORIZED_USER);
+        } catch (CardAlreadyExistsException e) {
+            Utils.showErrorMessageDialog(UIMessages.CARD_ALREADY_EXISTS);
+        } catch (CommunicationException e) {
+            Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
+        } catch (CharactersNotAllowedException e) {
+            Utils.showErrorMessageDialog(UIMessages.CHARACTERS_NOT_ALLOWED);
+        }
+    }
+
+    private void moveCard() {
+        ProjectDetailsPanel projectDetailsPanel = this.view.getProjectDetailsPanel();
+        CardDetailsPanel cardDetailsPanel = projectDetailsPanel.getCardDetailsPanel();
+        String cardName = cardDetailsPanel.getCardName();
+        CardStatus from = cardDetailsPanel.getFromStatus();
+        CardStatus to = (CardStatus) cardDetailsPanel.getToStatusComboBox().getSelectedItem();
+
+        // se l'utente non seleziona alcuno stato di arrivo
+        if (to == null) {
+            Utils.showErrorMessageDialog(UIMessages.OPERATION_NOT_ALLOWED);
+            return;
+        }
+
+        try {
+            this.model.moveCard(this.selectedProject, cardName, from, to);
+
+            // visualizzo schermata movimenti aggiornata
+            this.showCardDetails(cardName);
+        } catch (CommunicationException e) {
+            Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
+        } catch (ProjectNotExistsException e) {
+            Utils.showErrorMessageDialog(UIMessages.PROJECT_NOT_EXISTS);
+        } catch (UnauthorizedUserException e) {
+            Utils.showErrorMessageDialog(UIMessages.UNAUTHORIZED_USER);
+        } catch (OperationNotAllowedException e) {
+            Utils.showErrorMessageDialog(UIMessages.OPERATION_NOT_ALLOWED);
+
+            // visualizzo schermata movimenti aggiornata
+            this.showCardDetails(cardName);
+        } catch (CardNotExistsException e) {
+            Utils.showErrorMessageDialog(UIMessages.CARD_NOT_EXISTS);
         }
     }
 

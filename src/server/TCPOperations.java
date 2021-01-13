@@ -98,13 +98,13 @@ public interface TCPOperations {
      * @param projectName nome del progetto
      * @param whoRequest utente che richiede l'operazione
      *
-     * @return lista delle cards del progetto
+     * @return liste delle cards del progetto, per ogni stato possibile
      *
      * @throws ProjectNotExistsException se il progetto non esiste
      * @throws UnauthorizedUserException se non si hanno le autorizzazioni necessarie
      *
      */
-    List<String> showCards(String projectName, String whoRequest)
+    Map<CardStatus, List<String>> showCards(String projectName, String whoRequest)
             throws ProjectNotExistsException, UnauthorizedUserException;
 
     /**
@@ -114,14 +114,14 @@ public interface TCPOperations {
      * @param cardName nome della card
      * @param whoRequest utente che richiede l'operazione
      *
-     * @return card del progetto con nome cardName
+     * @return card del progetto con nome cardName, senza il suo storico movimenti
      *
      * @throws ProjectNotExistsException se il progetto non esiste
      * @throws UnauthorizedUserException se non si hanno le autorizzazioni necessarie
      * @throws CardNotExistsException se la card non esiste
      *
      */
-    Card showCard(String projectName, String cardName, String whoRequest)
+    CardNoMovs showCard(String projectName, String cardName, String whoRequest)
             throws ProjectNotExistsException, UnauthorizedUserException, CardNotExistsException;
 
     /**

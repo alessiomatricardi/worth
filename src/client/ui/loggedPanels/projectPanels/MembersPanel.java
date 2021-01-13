@@ -61,7 +61,7 @@ public class MembersPanel extends JPanel {
 
         for (JLabel member : members) {
             member.setFont(new Font(font.getName(), Font.PLAIN, (int)(font.getSize() * 1.3)));
-            member.setPreferredSize(new Dimension(300, 20));
+            member.setPreferredSize(new Dimension(10, 30));
             membersPanel.add(member);
         }
 

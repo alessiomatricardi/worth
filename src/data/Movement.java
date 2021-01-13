@@ -24,4 +24,17 @@ public class Movement implements Serializable {
         this.to = to;
         this.when = LocalDateTime.now(ZoneId.systemDefault());
     }
+
+    public CardStatus getFrom() {
+        return from;
+    }
+
+    public CardStatus getTo() {
+        return to;
+    }
+
+    public LocalDateTime getWhen() {
+        return when;
+    }
+
 }

@@ -315,7 +315,7 @@ public class ClientModel {
         }
     }
 
-    public List<String> showCards(String projectName)
+    public Map<CardStatus, List<String>> showCards(String projectName)
             throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
         // prepara messaggio da inviare
         RequestMessage requestMessage = new RequestMessage(
@@ -332,9 +332,9 @@ public class ClientModel {
         }
 
         try {
-            List<String> cards = this.mapper.readValue(
+            Map<CardStatus, List<String>> cards = this.mapper.readValue(
                     response.getResponseBody(),
-                    new TypeReference<List<String>>() {}
+                    new TypeReference<Map<CardStatus, List<String>>>() {}
             );
 
             return cards;
@@ -344,7 +344,7 @@ public class ClientModel {
         }
     }
 
-    public Card showCard(String projectName, String cardName)
+    public CardNoMovs showCard(String projectName, String cardName)
             throws CommunicationException, ProjectNotExistsException, CardNotExistsException, UnauthorizedUserException {
         // prepara messaggio da inviare
         RequestMessage requestMessage = new RequestMessage(
@@ -363,7 +363,7 @@ public class ClientModel {
         }
 
         try {
-            Card card = this.mapper.readValue(
+            CardNoMovs card = this.mapper.readValue(
                     response.getResponseBody(),
                     new TypeReference<Card>() {}
             );
