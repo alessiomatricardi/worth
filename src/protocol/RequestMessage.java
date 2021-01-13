@@ -3,6 +3,8 @@ package worth.protocol;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by alessiomatricardi on 13/01/21
@@ -11,11 +13,11 @@ import java.io.Serializable;
  */
 public class RequestMessage implements Serializable {
     private String command;
-    private String[] arguments;
+    private List<String> arguments;
 
     public RequestMessage(String command, String... arguments) {
         this.command = command;
-        this.arguments = arguments;
+        this.arguments = Arrays.asList(arguments);
     }
 
     @JsonCreator
@@ -25,7 +27,7 @@ public class RequestMessage implements Serializable {
         return this.command;
     }
 
-    public String[] getArguments() {
+    public List<String> getArguments() {
         return this.arguments;
     }
 }

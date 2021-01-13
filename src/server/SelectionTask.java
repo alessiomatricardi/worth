@@ -1,9 +1,11 @@
 package worth.server;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import worth.data.*;
 import worth.exceptions.*;
 import worth.protocol.CommunicationProtocol;
+import worth.protocol.RequestMessage;
 import worth.protocol.ResponseMessage;
 import worth.protocol.UDPMessage;
 import worth.server.rmi.RMICallbackServiceImpl;
@@ -127,12 +129,15 @@ public class SelectionTask implements Runnable {
                             continue;
                         }
 
-                        // splitto messaggio attraverso separatore
-                        String[] tokens = messageReceived.toString().split(CommunicationProtocol.SEPARATOR);
-                        String command = tokens[0]; // la prima stringa è il comando
+                        // ottengo messaggio di richiesta
+                        RequestMessage requestMessage = this.mapper.readValue(
+                                messageReceived.toString(),
+                                new TypeReference<RequestMessage>() {}
+                        );
 
-                        // decodifico gli argomenti
-                        List<String> arguments = this.decodeMessageArguments(tokens);
+
+                        String command = requestMessage.getCommand();
+                        List<String> arguments = requestMessage.getArguments();
 
                         // preparo response code
                         int responseCode = CommunicationProtocol.UNKNOWN;
@@ -141,7 +146,6 @@ public class SelectionTask implements Runnable {
 
                         // in base al comando, ci saranno diversi comportamenti
                         switch (command) {
-                            // todo server scrive su chat multicast
                             case CommunicationProtocol.LOGIN_CMD: {
                                 // controllo numero di parametri
                                 if (arguments.size() != 2) {
@@ -556,21 +560,6 @@ public class SelectionTask implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * @param elements array di N parametri, i cui ultimi N-1 sono argomenti da dover decodificare
-     *
-     * @return una lista contenente gli N-1 parametri decodificati in Base64
-     *
-     * */
-    private List<String> decodeMessageArguments(String[] elements) {
-        List<String> args = new ArrayList<>();
-        for (int i = 1; i < elements.length; i++) {
-            String decoded = new String(Base64.getDecoder().decode(elements[i]), StandardCharsets.UTF_8);
-            args.add(decoded);
-        }
-        return args;
     }
 
 }

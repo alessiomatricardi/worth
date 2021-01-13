@@ -6,6 +6,7 @@ import worth.client.model.rmi.RMICallbackNotify;
 import worth.client.model.rmi.RMICallbackNotifyImpl;
 import worth.data.*;
 import worth.protocol.CommunicationProtocol;
+import worth.protocol.RequestMessage;
 import worth.protocol.ResponseMessage;
 import worth.exceptions.*;
 import worth.protocol.UDPMessage;
@@ -98,14 +99,13 @@ public class ClientModel {
     public void login(String username, String password)
             throws UserNotExistsException, AlreadyLoggedException, WrongPasswordException, CommunicationException {
         // prepara messaggio da inviare
-        String messageToSend = this.encodeMessageArguments(
+        RequestMessage requestMessage = new RequestMessage(
                 CommunicationProtocol.LOGIN_CMD,
                 username,
                 password
         );
 
-        ResponseMessage response = null;
-        response = this.sendTCPRequest(messageToSend);
+        ResponseMessage response = this.sendTCPRequest(requestMessage);
 
         switch (response.getStatusCode()) { // casi di errori
             case CommunicationProtocol.USER_NOT_EXISTS -> throw new UserNotExistsException();
@@ -142,12 +142,11 @@ public class ClientModel {
     public void logout()
             throws UserNotExistsException, CommunicationException {
         // prepara messaggio da inviare
-        String messageToSend = this.encodeMessageArguments(
+        RequestMessage requestMessage = new RequestMessage(
                 CommunicationProtocol.LOGOUT_CMD
         );
 
-        ResponseMessage response = null;
-        response = this.sendTCPRequest(messageToSend);
+        ResponseMessage response = this.sendTCPRequest(requestMessage);
 
         // casi di errori
         if (response.getStatusCode() == CommunicationProtocol.USER_NOT_EXISTS) {
@@ -188,12 +187,11 @@ public class ClientModel {
     public List<Project> listProjects()
             throws CommunicationException, UserNotExistsException {
         // prepara messaggio da inviare
-        String messageToSend = this.encodeMessageArguments(
+        RequestMessage requestMessage = new RequestMessage(
                 CommunicationProtocol.LISTPROJECTS_CMD
         );
 
-        ResponseMessage response = null;
-        response = this.sendTCPRequest(messageToSend);
+        ResponseMessage response = this.sendTCPRequest(requestMessage);
 
         if (response.getStatusCode() == CommunicationProtocol.USER_NOT_EXISTS) {
             throw new UserNotExistsException();
@@ -216,13 +214,12 @@ public class ClientModel {
     public void createProject(String projectName)
             throws ProjectAlreadyExistsException, NoSuchAddressException, CharactersNotAllowedException, CommunicationException {
         // prepara messaggio da inviare
-        String messageToSend = this.encodeMessageArguments(
+        RequestMessage requestMessage = new RequestMessage(
                 CommunicationProtocol.CREATEPROJECT_CMD,
                 projectName
         );
 
-        ResponseMessage response = null;
-        response = this.sendTCPRequest(messageToSend);
+        ResponseMessage response = this.sendTCPRequest(requestMessage);
 
         switch (response.getStatusCode()) { // casi di errori
             case CommunicationProtocol.CREATEPROJECT_ALREADYEXISTS -> throw new ProjectAlreadyExistsException();
@@ -235,14 +232,13 @@ public class ClientModel {
     public void addMember(String projectName, String username)
             throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException, UserAlreadyPresentException, UserNotExistsException {
         // prepara messaggio da inviare
-        String messageToSend = this.encodeMessageArguments(
+        RequestMessage requestMessage = new RequestMessage(
                 CommunicationProtocol.ADD_MEMBER_CMD,
                 projectName,
                 username
         );
 
-        ResponseMessage response = null;
-        response = this.sendTCPRequest(messageToSend);
+        ResponseMessage response = this.sendTCPRequest(requestMessage);
 
         switch (response.getStatusCode()) {
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
@@ -256,13 +252,12 @@ public class ClientModel {
     public List<String> showMembers(String projectName)
             throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
         // prepara messaggio da inviare
-        String messageToSend = this.encodeMessageArguments(
+        RequestMessage requestMessage = new RequestMessage(
                 CommunicationProtocol.SHOW_MEMBERS_CMD,
                 projectName
         );
 
-        ResponseMessage response = null;
-        response = this.sendTCPRequest(messageToSend);
+        ResponseMessage response = this.sendTCPRequest(requestMessage);
 
         switch (response.getStatusCode()) {
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
@@ -286,13 +281,12 @@ public class ClientModel {
     public List<String> showCards(String projectName)
             throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
         // prepara messaggio da inviare
-        String messageToSend = this.encodeMessageArguments(
+        RequestMessage requestMessage = new RequestMessage(
                 CommunicationProtocol.SHOW_CARDS_CMD,
                 projectName
         );
 
-        ResponseMessage response = null;
-        response = this.sendTCPRequest(messageToSend);
+        ResponseMessage response = this.sendTCPRequest(requestMessage);
 
         switch (response.getStatusCode()) {
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
@@ -316,14 +310,13 @@ public class ClientModel {
     public Card showCard(String projectName, String cardName)
             throws CommunicationException, ProjectNotExistsException, CardNotExistsException, UnauthorizedUserException {
         // prepara messaggio da inviare
-        String messageToSend = this.encodeMessageArguments(
+        RequestMessage requestMessage = new RequestMessage(
                 CommunicationProtocol.SHOW_CARD_CMD,
                 projectName,
                 cardName
         );
 
-        ResponseMessage response = null;
-        response = this.sendTCPRequest(messageToSend);
+        ResponseMessage response = this.sendTCPRequest(requestMessage);
 
         switch (response.getStatusCode()) {
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
@@ -348,15 +341,14 @@ public class ClientModel {
     public void addCard(String projectName, String cardName, String description)
             throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException, CardAlreadyExistsException, CharactersNotAllowedException {
         // prepara messaggio da inviare
-        String messageToSend = this.encodeMessageArguments(
+        RequestMessage requestMessage = new RequestMessage(
                 CommunicationProtocol.ADD_CARD_CMD,
                 projectName,
                 cardName,
                 description
         );
 
-        ResponseMessage response = null;
-        response = this.sendTCPRequest(messageToSend);
+        ResponseMessage response = this.sendTCPRequest(requestMessage);
 
         switch (response.getStatusCode()) {
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
@@ -370,7 +362,7 @@ public class ClientModel {
     public void moveCard(String projectName, String cardName, CardStatus from, CardStatus to)
             throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException, OperationNotAllowedException, CardNotExistsException {
         // prepara messaggio da inviare
-        String messageToSend = this.encodeMessageArguments(
+        RequestMessage requestMessage = new RequestMessage(
                 CommunicationProtocol.MOVE_CARD_CMD,
                 projectName,
                 cardName,
@@ -378,8 +370,7 @@ public class ClientModel {
                 to.name()
         );
 
-        ResponseMessage response = null;
-        response = this.sendTCPRequest(messageToSend);
+        ResponseMessage response = this.sendTCPRequest(requestMessage);
 
         switch (response.getStatusCode()) {
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
@@ -393,14 +384,13 @@ public class ClientModel {
     public List<Movement> getCardHistory(String projectName, String cardName)
             throws CommunicationException, CardNotExistsException, UnauthorizedUserException, ProjectNotExistsException {
         // prepara messaggio da inviare
-        String messageToSend = this.encodeMessageArguments(
+        RequestMessage requestMessage = new RequestMessage(
                 CommunicationProtocol.CARD_HISTORY_CMD,
                 projectName,
                 cardName
         );
 
-        ResponseMessage response = null;
-        response = this.sendTCPRequest(messageToSend);
+        ResponseMessage response = this.sendTCPRequest(requestMessage);
 
         switch (response.getStatusCode()) {
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
@@ -433,13 +423,12 @@ public class ClientModel {
         }
 
         // prepara messaggio da inviare
-        String messageToSend = this.encodeMessageArguments(
+        RequestMessage requestMessage = new RequestMessage(
                 CommunicationProtocol.READ_CHAT_CMD,
                 projectName
         );
 
-        ResponseMessage response = null;
-        response = this.sendTCPRequest(messageToSend);
+        ResponseMessage response = this.sendTCPRequest(requestMessage);
 
         switch (response.getStatusCode()) {
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
@@ -493,13 +482,12 @@ public class ClientModel {
     public void cancelProject(String projectName)
             throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException, ProjectNotCancelableException {
         // prepara messaggio da inviare
-        String messageToSend = this.encodeMessageArguments(
+        RequestMessage requestMessage = new RequestMessage(
                 CommunicationProtocol.CANCELPROJECT_CMD,
                 projectName
         );
 
-        ResponseMessage response = null;
-        response = this.sendTCPRequest(messageToSend);
+        ResponseMessage response = this.sendTCPRequest(requestMessage);
 
         switch (response.getStatusCode()) {
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
@@ -539,50 +527,26 @@ public class ClientModel {
     }
 
     /**
-     * Stampa il messaggio che il client vuole inviare al server
-     *
-     * @param command comando da eseguire
-     * @param args argomenti specifici del comando da eseguire
-     */
-    private void printCall(String command, String... args) {
-        System.out.print("Call: " + command);
-        for (String arg : args) {
-            System.out.print(" <" + arg + ">");
-        }
-        System.out.println();
-    }
-
-    /**
-     * @param command comando da eseguire
-     * @param args argomenti specifici del comando da eseguire
-     *
-     * @return comando completo con argomenti codificati in Base64
-     */
-    private String encodeMessageArguments(String command, String... args) {
-        // stampa di log
-        this.printCall(command, args);
-
-        StringBuilder toReturn = new StringBuilder(command);
-        for (String arg : args) {
-            String encoded = Base64.getEncoder().encodeToString(arg.getBytes());
-            toReturn.append(CommunicationProtocol.SEPARATOR).append(encoded);
-        }
-        return toReturn.toString();
-    }
-
-    /**
-     * @param messageToSend messaggio da inviare al server
+     * @param requestMessage messaggio da inviare al server
      *
      * @return messaggio di risposta dal server
      *
      * @throws CommunicationException se ci sono errori di comunicazione
      * */
-    private ResponseMessage sendTCPRequest(String messageToSend) throws CommunicationException {
+    private ResponseMessage sendTCPRequest(RequestMessage requestMessage) throws CommunicationException {
         try {
+            // converto messaggio in string
+            String stringRequest = this.mapper.writeValueAsString(requestMessage);
+
+            // stampa di log
+            System.out.println("Call:\n" + stringRequest);
+
             // preparo messaggio
-            byte[] byteMessage = messageToSend.getBytes(StandardCharsets.UTF_8);
+            byte[] byteMessage = stringRequest.getBytes(StandardCharsets.UTF_8);
+
             // ottengo la sua lunghezza
             int messageLength = byteMessage.length;
+
             // scrivo nel buffer la sua lunghezza e il messaggio
             ByteBuffer sendBuffer = ByteBuffer.allocate(Integer.BYTES + messageLength);
             sendBuffer.putInt(messageLength).put(byteMessage);
