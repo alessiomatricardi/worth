@@ -16,6 +16,7 @@ import worth.utils.Utils;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import java.net.MulticastSocket;
 import java.net.UnknownHostException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -302,23 +303,29 @@ public class LoggedController {
 
     private void showChat() {
         try {
-            String chatAddress = this.model.readChat(this.selectedProject);
+            String chatAddressAndPort = this.model.readChat(this.selectedProject);
 
             /*
-             * se chatAddress non nullo, istanzio un thread che si mette in ascolto dei messaggi
+             * se chatAddressAndPort non nullo, istanzio un thread che si mette in ascolto dei messaggi
              * in arrivo su quella chat
              * inoltre, devo creare la card associata a quella specifica chat
              */
-            if (chatAddress != null) {
+            if (chatAddressAndPort != null) {
                 // creo card
                 ChatLog chatLog = new ChatLog();
+
+                MulticastSocket multicastSocket = this.model.getMulticastSocket(this.selectedProject);
+
+                String[] tokens = chatAddressAndPort.split(":");
+                String chatAddress = tokens[0];
+                int port = Integer.parseInt(tokens[1]);
 
                 // thread da mandare in esecuzione
                 ChatReaderControllerTask chatReaderControllerTask = new ChatReaderControllerTask(
                         this.model.getUsername(),
-                        this.model.getMulticastSocket(),
+                        multicastSocket,
                         chatAddress,
-                        CommunicationProtocol.UDP_CHAT_PORT,
+                        port,
                         chatLog
                 );
                 ExecutorService threadPool = this.model.getThreadPool();
@@ -371,6 +378,8 @@ public class LoggedController {
             Utils.showErrorMessageDialog(UIMessages.PROJECT_ALREADY_EXISTS);
         } catch (CharactersNotAllowedException e) {
             Utils.showErrorMessageDialog(UIMessages.CHARACTERS_NOT_ALLOWED);
+        } catch (NoSuchPortException e) {
+            Utils.showErrorMessageDialog(UIMessages.NO_SUCH_PORT);
         }
     }
 
@@ -497,6 +506,7 @@ public class LoggedController {
         } catch (UnobtainableChatAddressException e) {
             Utils.showErrorMessageDialog(UIMessages.UNOBTAINABLE_ADDRESS);
         } catch (IOException e) {
+            e.printStackTrace();
             Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
         } catch (DatagramTooBigException e) {
             Utils.showErrorMessageDialog(UIMessages.DATAGRAM_TOO_BIG);

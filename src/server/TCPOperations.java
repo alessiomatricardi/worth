@@ -55,10 +55,11 @@ public interface TCPOperations {
      *
      * @throws ProjectAlreadyExistsException se un progetto con quel nome esiste già
      * @throws NoSuchAddressException se non ci sono più indirizzi multicast disponibili
+     * @throws NoSuchPortException se non ci sono più porte disponibili
      * @throws IOException se ci sono errori nel salvataggio del progetto
      *
      */
-    void createProject(String projectName, String whoRequest) throws ProjectAlreadyExistsException, NoSuchAddressException, IOException;
+    void createProject(String projectName, String whoRequest) throws ProjectAlreadyExistsException, NoSuchAddressException, IOException, NoSuchPortException;
 
     /**
      * Aggiunge un membro al progetto
@@ -184,7 +185,7 @@ public interface TCPOperations {
      * @param projectName nome del progetto
      * @param whoRequest utente che richiede l'operazione
      *
-     * @return indirizzo multicast della chat del progetto
+     * @return indirizzo e porta della chat del progetto
      *
      * @throws ProjectNotExistsException se il progetto non esiste
      * @throws UnauthorizedUserException se non si hanno le autorizzazioni necessarie
@@ -226,5 +227,17 @@ public interface TCPOperations {
      *
      */
     String getProjectChatAddress(String projectName) throws ProjectNotExistsException;
+
+    /**
+     * Ottieni la porta del progetto projectName
+     *
+     * @param projectName nome del progetto
+     *
+     * @return porta del progetto
+     *
+     * @throws ProjectNotExistsException se il progetto non esiste
+     *
+     */
+    int getProjectChatPort(String projectName) throws ProjectNotExistsException;
 
 }

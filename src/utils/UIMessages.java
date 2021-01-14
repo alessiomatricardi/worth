@@ -65,6 +65,10 @@ public class UIMessages {
     public static final String NO_SUCH_ADDRESS = "Sorry, but the project can't be created because" +
             " we passed the maximum number of chat addresses.";
 
+    // messaggio "porte finite"
+    public static final String NO_SUCH_PORT = "Sorry, but the project can't be created because" +
+            " we passed the maximum number of ports.";
+
     // messaggio "progetto già esistente"
     public static final String PROJECT_ALREADY_EXISTS = "The project can't be created because" +
             " already exists another project with this name.";

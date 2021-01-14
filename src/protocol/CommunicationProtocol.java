@@ -17,9 +17,6 @@ public abstract class CommunicationProtocol {
     // Porta del registry per recupero servizio di registrazione
     public static final int REGISTRY_PORT = 6789;
 
-    // Porta utilizzata nelle chat multicast per inviare e ricevere messaggi
-    public static final int UDP_CHAT_PORT = 50000;
-
     // quantità massima di bytes trasportabili in un messaggio UDP
     // 16 bit -> 2^16 = 65536
     public static final int UDP_MSG_MAX_LEN = 65536;
@@ -87,6 +84,7 @@ public abstract class CommunicationProtocol {
     public static final String CREATEPROJECT_CMD = "create_project";
     public static final int CREATEPROJECT_ALREADYEXISTS = 1;
     public static final int CREATEPROJECT_NOMOREADDRESSES = 2;
+    public static final int CREATEPROJECT_NOMOREPORTS = 3;
 
     public static final String ADD_MEMBER_CMD = "add_member";
     public static final int ADD_MEMBER_ALREADYPRESENT = 1;

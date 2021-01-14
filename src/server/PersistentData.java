@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import worth.data.*;
 import worth.exceptions.*;
-import worth.utils.MulticastAddressManager;
-import worth.utils.MyObjectMapper;
-import worth.utils.PasswordManager;
-import worth.utils.PasswordManagerImpl;
+import worth.utils.*;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -132,6 +129,9 @@ public class PersistentData implements Registration, TCPOperations {
                     } catch (AlreadyInitialedException e) {
                         System.out.println("Project seems to be already initialized...");
                         throw new IOException();
+                    } catch (NoSuchPortException e) {
+                        System.out.println("There are no more ports...");
+                        throw new IOException();
                     }
 
                     ++numOfProjects;
@@ -205,7 +205,7 @@ public class PersistentData implements Registration, TCPOperations {
 
     @Override
     public void createProject(String projectName, String whoRequest)
-            throws ProjectAlreadyExistsException, NoSuchAddressException, IOException {
+            throws ProjectAlreadyExistsException, NoSuchAddressException, IOException, NoSuchPortException {
         if (this.projects.containsKey(projectName))
             throw new ProjectAlreadyExistsException();
         Project newProject = new Project(projectName, whoRequest);
@@ -306,7 +306,7 @@ public class PersistentData implements Registration, TCPOperations {
             throw new ProjectNotExistsException();
         if (!project.getMembers().contains(whoRequest))
             throw new UnauthorizedUserException();
-        return project.getChatAddress();
+        return project.getChatAddress() + ":" + project.getChatPort();
     }
 
     @Override
@@ -320,6 +320,8 @@ public class PersistentData implements Registration, TCPOperations {
             throw new ProjectNotCancelableException();
         // libero indirizzo multicast
         MulticastAddressManager.freeAddress(project.getChatAddress());
+        // libero porta
+        PortManager.freePort(project.getChatPort());
         // rimuovo progetto
         this.projects.remove(projectName);
 
@@ -348,6 +350,15 @@ public class PersistentData implements Registration, TCPOperations {
         if (project == null)
             throw new ProjectNotExistsException();
         return project.getChatAddress();
+    }
+
+    @Override
+    public int getProjectChatPort(String projectName) throws ProjectNotExistsException {
+        Project project;
+        project = this.projects.get(projectName);
+        if (project == null)
+            throw new ProjectNotExistsException();
+        return project.getChatPort();
     }
 
     /**
@@ -459,9 +470,11 @@ public class PersistentData implements Registration, TCPOperations {
      * @throws IOException se ci sono errori nel caricamento
      * @throws AlreadyInitialedException
      * se alcuni campi del progetto non possono essere inizializzati perchè lo sono già
+     * @throws NoSuchPortException se non ci sono più porte disponibili
+     * @throws NoSuchAddressException se non ci sono più indirizzi disponibili
      */
     private void loadProject(File projectInfo, ByteBuffer buffer, List<Card> projectCardList)
-            throws IOException, NoSuchAddressException, AlreadyInitialedException {
+            throws IOException, NoSuchAddressException, AlreadyInitialedException, NoSuchPortException {
         // carico il file sul buffer
         this.readFile(projectInfo, buffer);
 
@@ -471,6 +484,7 @@ public class PersistentData implements Registration, TCPOperations {
 
         project.initCardList(projectCardList);
         project.initChatAddress(MulticastAddressManager.getAddress());
+        project.initChatPort(PortManager.getPort());
 
         this.projects.put(project.getName(), project);
     }

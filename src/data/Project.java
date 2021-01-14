@@ -5,10 +5,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import worth.exceptions.*;
 import worth.protocol.CommunicationProtocol;
 import worth.utils.MulticastAddressManager;
+import worth.utils.PortManager;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +29,9 @@ public class Project implements Serializable {
      */
     @JsonIgnore
     private String chatAddress;
+    // stesso trattamento riservato alle porte
+    @JsonIgnore
+    private int chatPort;
     private Map<CardStatus, List<String>> statusLists; // 4 liste
     /**
      * le card del progetto vengono serializzate in un file per ognuna
@@ -39,12 +42,13 @@ public class Project implements Serializable {
     @JsonCreator
     public Project() {}
 
-    public Project(String projectName, String creator) throws NoSuchAddressException {
+    public Project(String projectName, String creator) throws NoSuchAddressException, NoSuchPortException {
         this.name = projectName;
         this.members = new ArrayList<>();
         this.members.add(creator);
         this.creationDateTime = LocalDateTime.now(CommunicationProtocol.ZONE_ID);
         this.chatAddress = MulticastAddressManager.getAddress();
+        this.chatPort = PortManager.getPort();
         this.statusLists = new HashMap<>();
         CardStatus[] values = CardStatus.values();
         for (CardStatus status : values) {
@@ -63,6 +67,16 @@ public class Project implements Serializable {
         if (this.chatAddress != null)
             throw new AlreadyInitialedException();
         this.chatAddress = address;
+    }
+
+    /**
+     * questo metodo viene chiamato dal server per inizializzare
+     * l'indirizzo multicast del progetto durante la fase di deserializzazione
+     * non può essere chiamato da nessun altro
+     *
+     */
+    public void initChatPort(int port) {
+        this.chatPort = port;
     }
 
     /**
@@ -91,6 +105,10 @@ public class Project implements Serializable {
 
     public String getChatAddress() {
         return this.chatAddress;
+    }
+
+    public int getChatPort() {
+        return this.chatPort;
     }
 
     public Map<CardStatus, List<String>> getStatusLists() {

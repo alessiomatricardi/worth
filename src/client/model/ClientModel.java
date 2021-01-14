@@ -35,17 +35,17 @@ import java.util.concurrent.TimeUnit;
  * Model (logica) del client secondo il pattern MVC
  */
 public class ClientModel {
-    private static final int ALLOCATION_SIZE = 512*512; // spazio di allocazione del buffer
-    private boolean isLogged;                           // l'utente è online?
-    private String username;                            // per tenere traccia dello username dell'utente
-    private final SocketChannel socket;                 // socket per instaurazione connessione
-    private final ObjectMapper mapper;                  // mapper per serializzazione/deserializzazione
-    private Map<String, UserStatus> userStatus;         // lista degli stati degli utenti
-    private RMICallbackNotify callbackNotify;           // gestione callback
-    private Map<String, String> projectChatAddresses;   // indirizzi multicast dei progetti
-    private ExecutorService threadPool;                 // threadpool per servizio di lettura chat
-    private MulticastSocket multicastSocket;            // socket per chat multicast
-    private LocalDateTime lastListProjectsCall;         // l'ultima volta che ho chiamato listProjects
+    private static final int ALLOCATION_SIZE = 512*512;     // spazio di allocazione del buffer
+    private boolean isLogged;                               // l'utente è online?
+    private String username;                                // per tenere traccia dello username dell'utente
+    private final SocketChannel socket;                     // socket per instaurazione connessione
+    private final ObjectMapper mapper;                      // mapper per serializzazione/deserializzazione
+    private Map<String, UserStatus> userStatus;             // lista degli stati degli utenti
+    private RMICallbackNotify callbackNotify;               // gestione callback
+    private Map<String, String> projectChatAddressAndPort;  // indirizzi multicast e porte dei progetti
+    private ExecutorService threadPool;                     // threadpool per servizio di lettura chat
+    private LocalDateTime lastListProjectsCall;             // l'ultima volta che ho chiamato listProjects
+    private Map<String, MulticastSocket> projectSockets;    // sockets dei progetti
 
     // predispone la connessione del client con il server
     public ClientModel() throws IOException {
@@ -61,10 +61,9 @@ public class ClientModel {
 
         this.userStatus = null; // non è ancora il momento di inizializzarlo
         this.callbackNotify = null; // non è ancora il momento di inizializzarlo
-        this.projectChatAddresses = new HashMap<>();
+        this.projectChatAddressAndPort = new HashMap<>();
         this.threadPool = Executors.newCachedThreadPool();
-        this.multicastSocket = new MulticastSocket(CommunicationProtocol.UDP_CHAT_PORT);
-        this.multicastSocket.setSoTimeout(1000); // receive bloccante per 1 secondo
+        this.projectSockets = new HashMap<>();
         this.isLogged = false;
         this.username = "";
     }
@@ -169,8 +168,9 @@ public class ClientModel {
         // shutdown threads lettori delle chat
         shutdownThreadPool();
 
-        // invalido lista degli indirizzi multicast
-        this.projectChatAddresses = new HashMap<>();
+        // invalido lista degli indirizzi multicast e delle sockets
+        this.projectChatAddressAndPort = new HashMap<>();
+        this.projectSockets = new HashMap<>();
     }
 
     public Map<String, UserStatus> listUsers() {
@@ -222,17 +222,17 @@ public class ClientModel {
             for (Project project : projectList) {
                 projectNames.add(project.getName());
             }
-            Set<String> addressKeys = this.projectChatAddresses.keySet();
+            Set<String> addressKeys = this.projectChatAddressAndPort.keySet();
             for (String addressKey : addressKeys) {
                 int index = projectNames.indexOf(addressKey);
                 if (index == -1) { // caso 1
-                    this.projectChatAddresses.replace(addressKey, null);
+                    this.projectChatAddressAndPort.replace(addressKey, null);
                 } else {
                     // caso 2
                     if (this.lastListProjectsCall != null) {
                         Project project = projectList.get(index);
                         if (this.lastListProjectsCall.isBefore(project.getCreationDateTime())) {
-                            this.projectChatAddresses.replace(addressKey, null);
+                            this.projectChatAddressAndPort.replace(addressKey, null);
                         }
                     }
                 }
@@ -249,7 +249,7 @@ public class ClientModel {
     }
 
     public void createProject(String projectName)
-            throws ProjectAlreadyExistsException, NoSuchAddressException, CharactersNotAllowedException, CommunicationException {
+            throws ProjectAlreadyExistsException, NoSuchAddressException, CharactersNotAllowedException, CommunicationException, NoSuchPortException {
         // prepara messaggio da inviare
         RequestMessage requestMessage = new RequestMessage(
                 CommunicationProtocol.CREATEPROJECT_CMD,
@@ -261,6 +261,7 @@ public class ClientModel {
         switch (response.getStatusCode()) { // casi di errori
             case CommunicationProtocol.CREATEPROJECT_ALREADYEXISTS -> throw new ProjectAlreadyExistsException();
             case CommunicationProtocol.CREATEPROJECT_NOMOREADDRESSES -> throw new NoSuchAddressException();
+            case CommunicationProtocol.CREATEPROJECT_NOMOREPORTS -> throw new NoSuchPortException();
             case CommunicationProtocol.CHARS_NOT_ALLOWED -> throw new CharactersNotAllowedException();
             case CommunicationProtocol.COMMUNICATION_ERROR -> throw new CommunicationException();
         }
@@ -452,9 +453,9 @@ public class ClientModel {
     public String readChat(String projectName)
             throws CommunicationException, ProjectNotExistsException, UnauthorizedUserException {
         // se lo ho già, non devo chiedere al server l'indirizzo multicast
-        String chatAddress;
-        chatAddress = this.projectChatAddresses.get(projectName);
-        if (chatAddress != null) {
+        String chatAddressAndPort;
+        chatAddressAndPort = this.projectChatAddressAndPort.get(projectName);
+        if (chatAddressAndPort != null) {
             // dico al controller che c'è già un thread in ascolto
             return null;
         }
@@ -474,16 +475,24 @@ public class ClientModel {
         }
 
         try {
-            chatAddress = this.mapper.readValue(
+            chatAddressAndPort = this.mapper.readValue(
                     response.getResponseBody(),
                     new TypeReference<String>() {}
             );
 
-            // salvo la corrispondenza progetto-indirizzo
-            this.projectChatAddresses.put(projectName, chatAddress);
+            String[] tokens = chatAddressAndPort.split(":");
+            int port = Integer.parseInt(tokens[1]);
+            MulticastSocket multicastSocket = new MulticastSocket(port);
+            multicastSocket.setSoTimeout(1000); // receive bloccante per 1 secondo
 
-            // invio al controller l'indirizzo multicast su cui iniziare ad ascoltare
-            return chatAddress;
+            // salvo la corrispondenza progetto-indirizzo e porta
+            this.projectChatAddressAndPort.put(projectName, chatAddressAndPort);
+
+            // salvo la corrispondenza progetto-socket
+            this.projectSockets.put(projectName, multicastSocket);
+
+            // invio al controller l'indirizzo multicast e la porta su cui iniziare ad ascoltare
+            return chatAddressAndPort;
         } catch (IOException e) {
             e.printStackTrace();
             throw new CommunicationException();
@@ -492,12 +501,17 @@ public class ClientModel {
 
     public void sendChatMsg(String projectName, String message)
             throws UnobtainableChatAddressException, IOException, DatagramTooBigException {
-        String chatAddress = this.projectChatAddresses.get(projectName);
-        if (chatAddress == null) {
+        String chatAddressAndPort = this.projectChatAddressAndPort.get(projectName);
+        MulticastSocket multicastSocket = this.projectSockets.get(projectName);
+        if (chatAddressAndPort == null || multicastSocket == null) {
             // non dovrebbe accadere mai, siccome posso scrivere sulla chat
             // solo se la sto guardando, ergo conosco il suo indirizzo multicast
             throw new UnobtainableChatAddressException();
         }
+        String[] tokens = chatAddressAndPort.split(":");
+        String chatAddress = tokens[0];
+        int port = Integer.parseInt(tokens[1]);
+
         InetAddress group = InetAddress.getByName(chatAddress);
 
         UDPMessage udpMessage = new UDPMessage(
@@ -515,7 +529,7 @@ public class ClientModel {
                 byteMessage,
                 byteMessage.length,
                 group,
-                CommunicationProtocol.UDP_CHAT_PORT
+                port
         );
 
         multicastSocket.send(packet);
@@ -539,8 +553,8 @@ public class ClientModel {
         }
     }
 
-    public MulticastSocket getMulticastSocket() {
-        return this.multicastSocket;
+    public MulticastSocket getMulticastSocket(String projectName) {
+        return this.projectSockets.get(projectName);
     }
 
     public ExecutorService getThreadPool() {
