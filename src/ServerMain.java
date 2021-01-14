@@ -39,8 +39,6 @@ public class ServerMain {
         RMITask registrationTask = new RMITask(data, callbackService);
         new Thread(registrationTask).start();
 
-        // callback RMI
-
         // gestione connessioni TCP
         SelectionTask selectionTask = new SelectionTask(data, callbackService);
         new Thread(selectionTask).start();
