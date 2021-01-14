@@ -14,17 +14,20 @@ import java.util.List;
 public class CardDetailsPanel extends JPanel {
     private JScrollPane movementsScrollPane;
     private JPanel moveCardPanel;
+    private JPanel descriptionPanel;
     private String cardName = "";
+    private String description = "";
     private CardStatus fromStatus = CardStatus.TODO;
     private JComboBox<CardStatus> toStatusComboBox;
     private JButton moveCardButton;
     JLabel moveCardLabel;
     JLabel fromStateLabel;
+    JLabel descriptionLabel;
 
     public CardDetailsPanel() {
         // questo componente è diviso in 2 parti
         // nella prima c'è la lista dei movimenti della card
-        // nella seconda la possibilità di spostare la card
+        // nella seconda la possibilità di spostare la card e la descrizione
         this.setLayout(new GridLayout(1,2));
 
         // istanza containers
@@ -37,12 +40,18 @@ public class CardDetailsPanel extends JPanel {
         movementsScrollPane.getVerticalScrollBar().setUnitIncrement(16);
         // niente bordi
         movementsScrollPane.setBorder(BorderFactory.createEmptyBorder());
-        moveCardPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
 
-        // aggiungi elementi al container
-        moveCardLabel = new JLabel();
-        fromStateLabel = new JLabel();
-        JLabel toStateLabel = new JLabel("To state");
+        // il panel di destra è diviso in 2 righe
+        JPanel moveAndDescriptionPanel = new JPanel(new GridLayout(2, 1));
+
+        moveCardPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        descriptionPanel = new JPanel(new BorderLayout());
+
+        // aggiungi elementi al moveCardPanel
+
+        moveCardLabel = new JLabel("", JLabel.CENTER);
+        fromStateLabel = new JLabel("", JLabel.CENTER);
+        JLabel toStateLabel = new JLabel("To state:", JLabel.CENTER);
         Font font = moveCardLabel.getFont();
         Font newFont = new Font(font.getName(), Font.BOLD, (int)(font.getSize() * 1.5));
         moveCardLabel.setFont(newFont);
@@ -62,14 +71,28 @@ public class CardDetailsPanel extends JPanel {
 
         moveCardPanel.add(moveContainer);
 
-        // aggiungo componenti
+        // aggiungi elementi al descriptionPanel
+        JLabel descriptionTitle = new JLabel("Card description");
+        descriptionTitle.setFont(newFont);
+        descriptionLabel = new JLabel();
+        descriptionLabel.setVerticalAlignment(JLabel.TOP);
+
+        descriptionPanel.add(descriptionTitle, BorderLayout.NORTH);
+        descriptionPanel.add(descriptionLabel, BorderLayout.CENTER);
+
+        // aggiungo moveCardPanel e descriptionPanel a moveAndDescriptionPanel
+        moveAndDescriptionPanel.add(moveCardPanel);
+        moveAndDescriptionPanel.add(descriptionPanel);
+
+        // aggiungo componenti al panel principale
         this.add(movementsScrollPane, BorderLayout.WEST);
-        this.add(moveCardPanel, BorderLayout.EAST);
+        this.add(moveAndDescriptionPanel, BorderLayout.EAST);
     }
 
     public void setUI(List<JPanel> movements) {
         moveCardLabel.setText("Move card " + this.cardName);
         fromStateLabel.setText("From state: " + this.fromStatus.name());
+        descriptionLabel.setText(this.description);
 
         JPanel movementsPanel = new JPanel();
         movementsPanel.setLayout(new GridLayout(0, 1, 0, 0));
@@ -117,4 +140,9 @@ public class CardDetailsPanel extends JPanel {
     public void setFromStatus(CardStatus fromStatus) {
         this.fromStatus = fromStatus;
     }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
 }

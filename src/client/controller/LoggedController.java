@@ -15,6 +15,7 @@ import worth.utils.Utils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -104,7 +105,8 @@ public class LoggedController {
         cardDetailsPanel.getMoveCardButton().addActionListener(e -> this.moveCard());
 
         // dentro ChatPanel posso vedere la chat del progetto
-        // send message todo
+        ChatPanel chatPanel = projectDetailsPanel.getChatPanel();
+        chatPanel.getSendButton().addActionListener(e -> this.sendMessage());
 
     }
 
@@ -256,6 +258,7 @@ public class LoggedController {
 
             // modifico variabili interne (di utilità quando viene chiamato moveCard)
             cardDetailsPanel.setCardName(cardName);
+            cardDetailsPanel.setDescription(card.getDescription());
             cardDetailsPanel.setFromStatus(card.getStatus());
 
             // cerco di ottenere anche i movimenti della card
@@ -474,6 +477,27 @@ public class LoggedController {
             this.showCardDetails(cardName);
         } catch (CardNotExistsException e) {
             Utils.showErrorMessageDialog(UIMessages.CARD_NOT_EXISTS);
+        }
+    }
+
+    private void sendMessage() {
+        ProjectDetailsPanel projectDetails = this.view.getProjectDetailsPanel();
+        ChatPanel chatPanel = projectDetails.getChatPanel();
+        String message = chatPanel.getMessageField().getText();
+
+        if (message.isBlank()) {
+            return;
+        }
+
+        try {
+            this.model.sendChatMsg(this.selectedProject, message);
+
+            chatPanel.getMessageField().setText("");
+
+        } catch (UnobtainableChatAddressException e) {
+            Utils.showErrorMessageDialog(UIMessages.UNOBTAINABLE_ADDRESS);
+        } catch (IOException e) {
+            Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
         }
     }
 

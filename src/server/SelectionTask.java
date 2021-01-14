@@ -387,8 +387,8 @@ public class SelectionTask implements Runnable {
 
                                         UDPMessage udpMessage = new UDPMessage(
                                                 CommunicationProtocol.SYSTEM_NAME,
-                                                username + " moved " + cardName +
-                                                        " from " + from.name() + " to " + to.name(),
+                                                username + " moved card '" + cardName +
+                                                        "' from " + from.name() + " to " + to.name(),
                                                 true
                                         );
                                         byte[] byteMessage = this.mapper.writeValueAsBytes(udpMessage);

@@ -15,15 +15,33 @@ public class ChatPanel extends JPanel implements HostsCardsContainer {
     // messagePanels.get(nomeProgetto) = pannello chat del progetto
     private Map<String, ChatLog> messageCards;
 
+    private JTextField messageField; // dove scrivere il messaggio
+    private JButton sendButton;
+
     private CardLayout cardLayout;
     private JPanel cardContainer;
 
     public ChatPanel() {
+        // layout BorderLayout
+        this.setLayout(new BorderLayout());
+        this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // istanzio mappa di ChatLog
         this.messageCards = new HashMap<>();
 
         // gestione delle Card ChatLog
         cardLayout = new CardLayout();
         cardContainer = new JPanel(cardLayout);
+
+        // parte sottostante, dove vengono scritti i messaggi e inviati
+        messageField = new JTextField();
+        sendButton = new JButton("Send");
+        JPanel messagePanel = new JPanel(new BorderLayout());
+        messagePanel.add(messageField, BorderLayout.CENTER);
+        messagePanel.add(sendButton, BorderLayout.EAST);
+
+        this.add(cardContainer, BorderLayout.CENTER);
+        this.add(messagePanel, BorderLayout.SOUTH);
     }
 
     public void addChatLog(String projectName, ChatLog chatLog) {
@@ -41,5 +59,13 @@ public class ChatPanel extends JPanel implements HostsCardsContainer {
     @Override
     public JPanel getCardContainer() {
         return cardContainer;
+    }
+
+    public JTextField getMessageField() {
+        return messageField;
+    }
+
+    public JButton getSendButton() {
+        return sendButton;
     }
 }

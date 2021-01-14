@@ -7,6 +7,7 @@ import worth.protocol.CommunicationProtocol;
 import worth.protocol.UDPMessage;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +34,7 @@ public class ChatReaderControllerTask implements Runnable {
         this.group = InetAddress.getByName(address);
         this.port = port;
         this.chatLog = chatLog;
+        //SocketAddress socketAddress = new InetSocketAddress(this.group, port);
     }
 
     @Override
@@ -63,7 +65,7 @@ public class ChatReaderControllerTask implements Runnable {
                     UDPMessage udpMessage = new ObjectMapper().readValue(boh,
                             new TypeReference<UDPMessage>() {});
 
-                    System.out.println(udpMessage.getMessage());
+                    showMessage(udpMessage);
 
                     isTimeToExit = isTimeToExit(udpMessage);
                 } catch (SocketTimeoutException e) {
@@ -82,16 +84,55 @@ public class ChatReaderControllerTask implements Runnable {
     }
 
     // costruisce una UI del messaggio in base a diversi parametri
-    public JComponent getMessageUI (UDPMessage message) {
-        // se il messaggio è del sistema todo
+    public void showMessage (UDPMessage message) {
+        JPanel panel = new JPanel();
+        // se il messaggio è del sistema
         if (message.isFromSystem()) {
             // costruisce messaggio inviato dal sistema
+            // messaggio "plain"
+            JLabel text = new JLabel(message.getAuthor() + ": " + message.getMessage());
+            Font font = text.getFont();
+            int newSize = (int) (font.getSize() * 1.1);
+            text.setFont(new Font(font.getName(), Font.PLAIN, newSize));
+            panel.add(text);
         } else if (message.getAuthor().equals(this.applicationUser)) {
             // costruisce messaggio inviato da colui che è attualmente online nell'applicativo
+            panel.setSize(new Dimension(900, 50));
+            panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+            JPanel inside = new JPanel(new GridLayout(2,1));
+
+            JLabel authorLabel = new JLabel(message.getAuthor());
+            Font font = authorLabel.getFont().deriveFont(Font.BOLD);
+            authorLabel.setFont(font);
+
+            JLabel textMessage = new JLabel("<html>" + message.getMessage() + "</html>");
+            textMessage.setPreferredSize(new Dimension(900, 40));
+            textMessage.setVerticalAlignment(JLabel.TOP);
+
+            inside.add(authorLabel);
+            inside.add(textMessage);
+            panel.add(inside);
         } else {
             // costruisce messaggio inviato da altro membro del progetto
+            panel.setSize(new Dimension(900, 50));
+            panel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+            JPanel inside = new JPanel(new GridLayout(2,1));
+
+            JLabel authorLabel = new JLabel(message.getAuthor());
+            Font font = authorLabel.getFont().deriveFont(Font.BOLD);
+            authorLabel.setFont(font);
+            authorLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+
+            JLabel textMessage = new JLabel("<html>" + message.getMessage() + "</html>");
+            textMessage.setPreferredSize(new Dimension(900, 40));
+            textMessage.setVerticalAlignment(JLabel.TOP);
+            textMessage.setHorizontalAlignment(SwingConstants.RIGHT);
+
+            inside.add(authorLabel);
+            inside.add(textMessage);
+            panel.add(inside);
         }
-        return null;
+        this.chatLog.addMessage(panel);
     }
 
     /*

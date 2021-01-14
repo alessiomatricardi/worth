@@ -74,7 +74,7 @@ public class UIMessages {
             " there are some tasks to do yet.";
 
     // messaggio "progetto inesistente"
-    public static final String PROJECT_NOT_EXISTS = "I don't know how, but you tried to access" +
+    public static final String PROJECT_NOT_EXISTS = "You're trying to access" +
             " to a not existing project. Maybe it has been canceled while" +
             " you were trying to modify it.";
 
@@ -95,5 +95,10 @@ public class UIMessages {
 
     // messaggio "membro aggiunto con successo"
     public static final String ADD_MEMBER_SUCCESS = "Member successfully added.";
+
+    // messaggio ""
+    public static final String UNOBTAINABLE_ADDRESS = "Sorry, but we can't send this message.\n" +
+            "Seems like there's no saved chat address.\n" +
+            "Try again, if the problem persists, restart the application";
 
 }

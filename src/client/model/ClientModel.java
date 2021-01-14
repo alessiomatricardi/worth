@@ -64,7 +64,7 @@ public class ClientModel {
         this.projectChatAddresses = new HashMap<>();
         this.threadPool = Executors.newCachedThreadPool();
         this.multicastSocket = new MulticastSocket(CommunicationProtocol.UDP_CHAT_PORT);
-        this.multicastSocket.setSoTimeout(2000); // todo better
+        this.multicastSocket.setSoTimeout(1000); // receive bloccante per 1 secondo
         this.isLogged = false;
         this.username = "";
     }
