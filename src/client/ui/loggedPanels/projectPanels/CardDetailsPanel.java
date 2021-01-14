@@ -14,10 +14,12 @@ import java.util.List;
 public class CardDetailsPanel extends JPanel {
     private JScrollPane movementsScrollPane;
     private JPanel moveCardPanel;
-    private String cardName;
-    private CardStatus fromStatus;
+    private String cardName = "";
+    private CardStatus fromStatus = CardStatus.TODO;
     private JComboBox<CardStatus> toStatusComboBox;
     private JButton moveCardButton;
+    JLabel moveCardLabel;
+    JLabel fromStateLabel;
 
     public CardDetailsPanel() {
         // questo componente è diviso in 2 parti
@@ -37,48 +39,61 @@ public class CardDetailsPanel extends JPanel {
         movementsScrollPane.setBorder(BorderFactory.createEmptyBorder());
         moveCardPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
 
-        // aggiungi buttons al container
-        JLabel label = new JLabel("Move card");
-        Font font = label.getFont();
-        label.setFont(new Font(font.getName(), Font.BOLD, (int)(font.getSize() * 1.5)));
+        // aggiungi elementi al container
+        moveCardLabel = new JLabel();
+        fromStateLabel = new JLabel();
+        JLabel toStateLabel = new JLabel("To state");
+        Font font = moveCardLabel.getFont();
+        Font newFont = new Font(font.getName(), Font.BOLD, (int)(font.getSize() * 1.5));
+        moveCardLabel.setFont(newFont);
+        fromStateLabel.setFont(newFont);
+        toStateLabel.setFont(newFont);
+        JPanel labelPanel = new JPanel(new GridLayout(3,1));
+        labelPanel.add(moveCardLabel);
+        labelPanel.add(fromStateLabel);
+        labelPanel.add(toStateLabel);
+
         toStatusComboBox = new JComboBox<>(CardStatus.values());
         moveCardButton = new JButton("Move card");
         JPanel moveContainer = new JPanel(new GridLayout(3, 1, 10, 10));
-        moveContainer.add(label);
+        moveContainer.add(labelPanel);
         moveContainer.add(toStatusComboBox);
         moveContainer.add(moveCardButton);
+
         moveCardPanel.add(moveContainer);
 
         // aggiungo componenti
         this.add(movementsScrollPane, BorderLayout.WEST);
-        this.add(moveContainer, BorderLayout.EAST);
+        this.add(moveCardPanel, BorderLayout.EAST);
     }
-/*
-    public void setUI(List<JLabel> movements) {
-        JPanel membersPanel = new JPanel();
-        membersPanel.setLayout(new GridLayout(0, 1, 0, 0));
+
+    public void setUI(List<JPanel> movements) {
+        moveCardLabel.setText("Move card " + this.cardName);
+        fromStateLabel.setText("From state: " + this.fromStatus.name());
+
+        JPanel movementsPanel = new JPanel();
+        movementsPanel.setLayout(new GridLayout(0, 1, 0, 0));
 
         // inserisco gli utenti nel pannello
-        String text = members.size() + " member" + (members.size() == 1 ? "" : "s");
-        JLabel numOfMembers = new JLabel(text);
-        Font font = numOfMembers.getFont();
-        numOfMembers.setFont(new Font(font.getName(), Font.BOLD, (int)(font.getSize() * 1.5)));
-        membersPanel.add(numOfMembers);
+        String text = movements.size() + " movement" + (movements.size() == 1 ? "" : "s");
+        JLabel numOfMovs = new JLabel(text);
+        Font font = numOfMovs.getFont();
+        numOfMovs.setFont(new Font(font.getName(), Font.BOLD, (int)(font.getSize() * 1.5)));
+        movementsPanel.add(numOfMovs);
 
-        for (JLabel member : members) {
-            member.setFont(new Font(font.getName(), Font.PLAIN, (int)(font.getSize() * 1.3)));
-            member.setPreferredSize(new Dimension(10, 30));
-            membersPanel.add(member);
+        for (JPanel mov : movements) {
+            mov.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+            movementsPanel.add(mov);
         }
 
         // container contiene il pannello degli utenti
         JPanel container = new JPanel(new BorderLayout(0,0));
-        container.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
-        container.add(membersPanel, BorderLayout.NORTH);
+        container.setBorder(BorderFactory.createEmptyBorder(20,10,20,10));
+        container.add(movementsPanel, BorderLayout.NORTH);
 
-        membersScrollPane.setViewportView(container);
+        movementsScrollPane.setViewportView(container);
     }
-*/
+
     public String getCardName() {
         return cardName;
     }

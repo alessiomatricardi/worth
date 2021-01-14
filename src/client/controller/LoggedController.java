@@ -14,8 +14,11 @@ import worth.utils.UIMessages;
 import worth.utils.Utils;
 
 import javax.swing.*;
+import java.awt.*;
 import java.net.UnknownHostException;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -257,9 +260,23 @@ public class LoggedController {
 
             // cerco di ottenere anche i movimenti della card
             List<Movement> movements = this.model.getCardHistory(this.selectedProject, cardName);
+            List<JPanel> movPanel = new ArrayList<JPanel>();
+            DateTimeFormatter formatter = DateTimeFormatter
+                    .ofPattern("yyyy-MM-dd HH:mm")
+                    .withZone(CommunicationProtocol.ZONE_ID);
+            for (Movement mov : movements) {
+                JPanel panel = new JPanel(new GridLayout(3, 1,  5, 5));
+                JLabel fromLabel = new JLabel("From: " + mov.getFrom().name());
+                JLabel toLabel = new JLabel("To: " + mov.getTo().name());
+                JLabel whenLabel = new JLabel("When: " + mov.getWhen().format(formatter));
+                panel.add(fromLabel);
+                panel.add(toLabel);
+                panel.add(whenLabel);
+                movPanel.add(panel);
+            }
 
             // costruisco UI
-            //cardDetailsPanel.setUI(); todo
+            cardDetailsPanel.setUI(movPanel);
             this.updateUI(cardDetailsPanel);
 
             this.showCard(detailsPanel, ProjectDetailsPanel.CARD_DETAILS_PANEL);
