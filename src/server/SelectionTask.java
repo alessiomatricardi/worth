@@ -14,9 +14,15 @@ import worth.utils.MyObjectMapper;
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by alessiomatricardi on 03/01/21
@@ -51,8 +57,13 @@ public class SelectionTask implements Runnable {
             serverChannel.configureBlocking(false); // server socket non bloccante
             selector = Selector.open();
             serverChannel.register(selector, SelectionKey.OP_ACCEPT); // registro server per accettare connessioni
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
 
-            while (true) {
+        while (true) {
+            try {
                 selector.select();
 
                 Set<SelectionKey> readyKeys = selector.selectedKeys();
@@ -95,21 +106,45 @@ public class SelectionTask implements Runnable {
                         int totalReaded = 0;
                         int messageLength = -1;
                         StringBuilder messageReceived = new StringBuilder();
-                        do {
-                            byteReaded = client.read(buffer);
-                            if (byteReaded == -1) break;
-                            totalReaded += byteReaded;
+                        try {
+                            do {
+                                byteReaded = client.read(buffer);
+                                if (byteReaded == -1) break;
+                                totalReaded += byteReaded;
 
-                            buffer.flip();
+                                buffer.flip();
 
-                            // salvo lunghezza del messaggio
-                            if (messageLength == -1)
-                                messageLength = buffer.getInt();
+                                // salvo lunghezza del messaggio
+                                if (messageLength == -1)
+                                    messageLength = buffer.getInt();
 
-                            messageReceived.append(StandardCharsets.UTF_8.decode(buffer).toString());
+                                messageReceived.append(StandardCharsets.UTF_8.decode(buffer).toString());
 
-                            buffer.clear();
-                        } while (totalReaded < messageLength);
+                                buffer.clear();
+                            } while (totalReaded < messageLength);
+                        } catch (IOException e) {
+                            // su Windows viene catturata una SocketException
+                            // quando il client chiude la connessione con il server
+
+                            // è stata chiusa la connessione dal client
+                            // se l'utente è online, devo fare log out
+                            String username = attachment.getUsername();
+                            if (username != null) {
+                                try {
+                                    data.logout(username);
+                                    callbackService.notifyUsers(username, UserStatus.OFFLINE);
+                                } catch (UserNotExistsException e1) {
+                                    e1.printStackTrace();
+                                }
+                            }
+
+                            key.cancel();
+                            client.close();
+                            continue;
+                        }
+
+                        // in macOS non viene catturata alcuna eccezione
+                        // la read ritorna semplicemente -1
 
                         // è stata chiusa la connessione dal client
                         if (byteReaded == -1) {
@@ -171,7 +206,7 @@ public class SelectionTask implements Runnable {
                                     responseCode = CommunicationProtocol.USER_NOT_EXISTS;
                                 } catch (AlreadyLoggedException e) {
                                     responseCode = CommunicationProtocol.LOGIN_ALREADY_LOGGED;
-                                }catch (WrongPasswordException e) {
+                                } catch (WrongPasswordException e) {
                                     responseCode = CommunicationProtocol.LOGIN_WRONGPWD;
                                 }
                                 break;
@@ -549,8 +584,7 @@ public class SelectionTask implements Runnable {
 
                         try {
                             client.write(buffer);
-                        }
-                        catch (IOException e) {
+                        } catch (IOException e) {
                             client.close();
                         }
                         if (!buffer.hasRemaining())
@@ -560,9 +594,9 @@ public class SelectionTask implements Runnable {
                         SelectionKey key2 = client.register(selector, SelectionKey.OP_READ, attachment);
                     }
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
