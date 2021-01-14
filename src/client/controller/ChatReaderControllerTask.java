@@ -22,7 +22,7 @@ public class ChatReaderControllerTask implements Runnable {
     private final MulticastSocket socket;           // socket
     private final InetAddress group;                // indirizzo multicast
     private final int port;                         // porta dove ricevere i messaggi
-    private final ChatLog chatLog;  // dove aggiungere i messaggi
+    private final ChatLog chatLog;                  // dove aggiungere i messaggi
 
     public ChatReaderControllerTask(String user,
                                     MulticastSocket socket,
@@ -34,13 +34,14 @@ public class ChatReaderControllerTask implements Runnable {
         this.group = InetAddress.getByName(address);
         this.port = port;
         this.chatLog = chatLog;
-        //SocketAddress socketAddress = new InetSocketAddress(this.group, port);
     }
 
     @Override
     public void run() {
         try {
-            socket.joinGroup(group);
+            NetworkInterface ni = socket.getNetworkInterface();
+            SocketAddress groupSocket = new InetSocketAddress(group, port);
+            socket.joinGroup(groupSocket, ni);
             byte[] buffer = new byte[CommunicationProtocol.UDP_MSG_MAX_LEN];
             DatagramPacket packetReceived = new DatagramPacket(
                     buffer,
@@ -74,7 +75,7 @@ public class ChatReaderControllerTask implements Runnable {
 
                 if (isTimeToExit || Thread.currentThread().isInterrupted()) {
                     // lascio il gruppo
-                    socket.leaveGroup(group);
+                    socket.leaveGroup(groupSocket, ni);
                     return;
                 }
             }
@@ -114,6 +115,7 @@ public class ChatReaderControllerTask implements Runnable {
             panel.add(inside);
         } else {
             // costruisce messaggio inviato da altro membro del progetto
+            // come sopra, ma con allineamento a destra
             panel.setSize(new Dimension(900, 50));
             panel.setLayout(new FlowLayout(FlowLayout.RIGHT));
             JPanel inside = new JPanel(new GridLayout(2,1));

@@ -96,9 +96,12 @@ public class UIMessages {
     // messaggio "membro aggiunto con successo"
     public static final String ADD_MEMBER_SUCCESS = "Member successfully added.";
 
-    // messaggio ""
+    // messaggio "indirizzo multicast non ottenibile"
     public static final String UNOBTAINABLE_ADDRESS = "Sorry, but we can't send this message.\n" +
             "Seems like there's no saved chat address.\n" +
             "Try again, if the problem persists, restart the application";
+
+    // messaggio "datagramma troppo grande"
+    public static final String DATAGRAM_TOO_BIG = "The message you're trying to send is too big.";
 
 }

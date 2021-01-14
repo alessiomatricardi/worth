@@ -491,7 +491,7 @@ public class ClientModel {
     }
 
     public void sendChatMsg(String projectName, String message)
-            throws UnobtainableChatAddressException, IOException {
+            throws UnobtainableChatAddressException, IOException, DatagramTooBigException {
         String chatAddress = this.projectChatAddresses.get(projectName);
         if (chatAddress == null) {
             // non dovrebbe accadere mai, siccome posso scrivere sulla chat
@@ -506,6 +506,11 @@ public class ClientModel {
                 false
         );
         byte[] byteMessage = this.mapper.writeValueAsBytes(udpMessage);
+
+        // check grandezza messaggio
+        if (byteMessage.length >= CommunicationProtocol.UDP_MSG_MAX_LEN)
+            throw new DatagramTooBigException();
+
         DatagramPacket packet = new DatagramPacket(
                 byteMessage,
                 byteMessage.length,

@@ -498,6 +498,8 @@ public class LoggedController {
             Utils.showErrorMessageDialog(UIMessages.UNOBTAINABLE_ADDRESS);
         } catch (IOException e) {
             Utils.showErrorMessageDialog(UIMessages.CONNECTION_ERROR);
+        } catch (DatagramTooBigException e) {
+            Utils.showErrorMessageDialog(UIMessages.DATAGRAM_TOO_BIG);
         }
     }
 
