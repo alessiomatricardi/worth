@@ -370,12 +370,10 @@ public class PersistentData implements Registration, TCPOperations {
      */
     private void storeUser(User user) throws IOException {
         String fileName = USERS_FOLDER_PATH + user.getUsername() + ".json";
-        FileChannel outChannel = FileChannel.open(Paths.get(fileName), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+
         byte[] byteUser = mapper.writeValueAsBytes(user);
 
-        ByteBuffer bb = ByteBuffer.wrap(byteUser);
-        while (bb.hasRemaining())
-            outChannel.write(bb);
+        this.storeFile(new File(fileName), byteUser);
     }
 
     /**
@@ -388,12 +386,10 @@ public class PersistentData implements Registration, TCPOperations {
      */
     private void storeCard(Card card, String projectName) throws IOException {
         String fileName = PROJECTS_FOLDER_PATH + projectName + "/card_" + card.getName() + ".json";
-        FileChannel outChannel = FileChannel.open(Paths.get(fileName), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+
         byte[] byteCard = mapper.writeValueAsBytes(card);
 
-        ByteBuffer bb = ByteBuffer.wrap(byteCard);
-        while (bb.hasRemaining())
-            outChannel.write(bb);
+        this.storeFile(new File(fileName), byteCard);
     }
 
     /**
@@ -410,12 +406,9 @@ public class PersistentData implements Registration, TCPOperations {
         if (!projectFolderFile.exists()) {
             projectFolderFile.mkdir();
         }
-        FileChannel outChannel = FileChannel.open(Paths.get(fileName), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         byte[] byteProject = mapper.writeValueAsBytes(project);
 
-        ByteBuffer bb = ByteBuffer.wrap(byteProject);
-        while (bb.hasRemaining())
-            outChannel.write(bb);
+        this.storeFile(new File(fileName), byteProject);
     }
 
     /**
@@ -490,7 +483,7 @@ public class PersistentData implements Registration, TCPOperations {
     }
 
     /**
-     * Caricamento del file sul buffer
+     * Caricamento del buffer sul file
      *
      * @param file file da dover caricare
      * @param buffer buffer interessato del caricamento
@@ -499,17 +492,41 @@ public class PersistentData implements Registration, TCPOperations {
      *
      */
     private void readFile(File file, ByteBuffer buffer) throws IOException {
-        FileChannel inChannel;
         if (file == null)
             throw new IOException(); // impossibile non esista
         buffer.clear();
-        inChannel= FileChannel.open(Paths.get(file.getAbsolutePath()), StandardOpenOption.READ);
-        boolean stop = false;
-        while (!stop) {
-            if (inChannel.read(buffer) == -1){
-                stop = true;
+        try (FileChannel inChannel = FileChannel.open(Paths.get(file.getAbsolutePath()), StandardOpenOption.READ)) {
+            boolean stop = false;
+            while (!stop) {
+                if (inChannel.read(buffer) == -1) {
+                    stop = true;
+                }
             }
+            buffer.flip();
         }
-        buffer.flip();
+    }
+
+    /**
+     * Caricamento del file sul buffer
+     *
+     * @param file file da dover caricare
+     * @param fileByte dati da scrivere sul file
+     *
+     * @throws IOException se ci sono errori nel caricamento
+     *
+     */
+    private void storeFile(File file, byte[] fileByte) throws IOException {
+        if (file == null)
+            throw new IOException(); // impossibile non esista
+
+        try (FileChannel outChannel = FileChannel.open(
+                Paths.get(file.getAbsolutePath()),
+                StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
+
+            ByteBuffer bb = ByteBuffer.wrap(fileByte);
+
+            while (bb.hasRemaining())
+                outChannel.write(bb);
+        }
     }
 }
